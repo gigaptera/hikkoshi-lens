@@ -1,4 +1,4 @@
-import { ApiStation } from "@/types/station";
+import { ApiStation } from "@/features/lines/types/station";
 
 // APIの基本設定
 const API_BASE_URL =

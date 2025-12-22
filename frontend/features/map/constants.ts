@@ -1,4 +1,4 @@
-import { type MapboxStyleId } from "@/constants/mapbox";
+import { type MapboxStyleId } from "@/features/map/constants/mapbox";
 
 /** デフォルト到達分（分単位）。 */
 export const DEFAULT_ISO_MINUTES = [5, 10, 15];

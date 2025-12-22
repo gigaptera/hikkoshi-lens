@@ -1,4 +1,4 @@
-import type { Station, ApiStation } from "@/types/station";
+import type { Station, ApiStation } from "@/features/lines/types/station";
 import api from "@/lib/api-client";
 
 // ApiStation -> Station 変換

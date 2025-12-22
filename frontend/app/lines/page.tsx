@@ -9,7 +9,7 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-import { useLocationStore } from "@/stores/location-store";
+import { useLocationStore } from "@/features/map/stores/location-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -21,13 +21,10 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Train, ArrowRight } from "@phosphor-icons/react";
-import {
-  fetchNearbyStations,
-  groupStationsByLine,
-} from "@/services/station/api";
-import { Line } from "@/types/station";
-import { useLineStore } from "@/stores/line-store";
-import { usePreferenceStore } from "@/stores/preference-store";
+import { fetchNearbyStations, groupStationsByLine } from "@/features/lines/api";
+import { Line } from "@/features/lines/types/station";
+import { useLineStore } from "@/features/lines/stores/line-store";
+import { usePreferenceStore } from "@/features/lines/stores/preference-store";
 import Link from "next/link";
 
 // 画面のみ（データはモック）。

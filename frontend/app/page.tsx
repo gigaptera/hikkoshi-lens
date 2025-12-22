@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useLocationStore } from "@/stores/location-store";
-import { usePreferenceStore } from "@/stores/preference-store";
+import { useLocationStore } from "@/features/map/stores/location-store";
+import { usePreferenceStore } from "@/features/lines/stores/preference-store";
 import {
   Card,
   CardHeader,
