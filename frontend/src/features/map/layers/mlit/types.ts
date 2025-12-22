@@ -6,7 +6,22 @@
 
 import type { Map } from "mapbox-gl";
 import type { FeatureCollection } from "geojson";
-import type { DIDProperties } from "@/lib/external-apis/mlit";
+
+// Defined locally after removing external-apis/mlit.ts
+export interface DIDProperties {
+  A16_001?: string; // 都道府県コード
+  A16_002?: string; // 都道府県名
+  A16_003?: string; // 市区町村コード
+  A16_004?: string; // 市区町村名
+  A16_005?: number; // 人口総数
+  A16_006?: number; // 面積
+  A16_007?: number; // 前回人口総数
+  A16_008?: number; // 前回面積
+  A16_012?: number; // 人口総数（男）
+  A16_013?: number; // 人口総数（女）
+  A16_014?: number; // 世帯総数
+  [key: string]: any;
+}
 
 export interface MLITDIDLayerConfig {
   sourceId: string;

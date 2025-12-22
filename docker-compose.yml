@@ -1,35 +1,42 @@
 services:
   backend:
     build:
-      context: .
+      context: ./backend
       dockerfile: Dockerfile
     container_name: hikkoshilens-backend
-    working_dir: /app
-    command: uvicorn backend.app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "8000:8000"
-    volumes:
-      - ./:/app
+      - "8080:8080"
     environment:
-      - PYTHONUNBUFFERED=1
-      - MLIT_API_KEY=${MLIT_API_KEY}
+      - DATABASE_URL=postgres://postgres:postgres@db:5432/hikkoshi?sslmode=disable
+      - PORT=8080
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgis/postgis:15-3.3-alpine
+    container_name: hikkoshilens-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=hikkoshi
+    volumes:
+      - db-data:/var/lib/postgresql/data
     restart: unless-stopped
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
-        NEXT_PUBLIC_MLIT_API_KEY: ${NEXT_PUBLIC_MLIT_API_KEY}
     container_name: hikkoshilens-frontend
     profiles: ["prod"]
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
       - NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
-      - NEXT_PUBLIC_MLIT_API_KEY=${NEXT_PUBLIC_MLIT_API_KEY}
     ports:
       - "3000:3000"
     restart: unless-stopped
@@ -43,9 +50,8 @@ services:
     depends_on:
       - backend
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
       - NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
-      - NEXT_PUBLIC_MLIT_API_KEY=${NEXT_PUBLIC_MLIT_API_KEY}
       - WATCHPACK_POLLING=true
     ports:
       - "3000:3000"
@@ -53,3 +59,6 @@ services:
       - ./frontend:/app
       - /app/node_modules
     restart: unless-stopped
+
+volumes:
+  db-data:

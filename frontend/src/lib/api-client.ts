@@ -1,6 +1,6 @@
 // APIの基本設定
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
 // 共通のエラーハンドリング
 class ApiError extends Error {
@@ -43,17 +43,16 @@ async function fetchApi<T>(
 export interface NearbyStationsParams {
   lat: number;
   lon: number;
-  radius?: number;
+  radius?: number; // meters
+  weights?: Record<string, number>;
 }
 
-import { Station } from "@/types/station";
-
-export type { Station };
+import { ApiStation } from "@/types/station";
 
 // 路線関連のAPI
-export interface LineStationsParams {
-  line_name: string;
-  company: string;
+export interface ThreeStopsParams {
+  stationId: number;
+  weights?: Record<string, number>;
 }
 
 export interface XYZParams {
@@ -64,27 +63,41 @@ export interface XYZParams {
   lat?: number;
 }
 
+// Helper params builder
+const buildWeightParams = (weights?: Record<string, number>) => {
+  if (!weights) return "";
+  return Object.entries(weights)
+    .map(([k, v]) => `&w_${k}=${v}`)
+    .join("");
+};
+
 // APIクライアント
 export const api = {
   // 駅関連
   stations: {
     // 近くの駅を取得
-    nearby: async ({ lat, lon, radius = 2 }: NearbyStationsParams) =>
-      fetchApi<Station[]>(
-        `api/stations/get_near_by_coordinates?lat=${lat}&lon=${lon}&radius=${radius}`
+    nearby: async ({
+      lat,
+      lon,
+      radius = 3000,
+      weights,
+    }: NearbyStationsParams) =>
+      fetchApi<ApiStation[]>(
+        `api/stations/nearby?lat=${lat}&lon=${lon}&radius=${radius}${buildWeightParams(
+          weights
+        )}`
+      ),
+
+    // 3駅検索
+    threeStops: async ({ stationId, weights }: ThreeStopsParams) =>
+      fetchApi<ApiStation[]>(
+        `api/stations/${stationId}/three-stops?${
+          weights ? buildWeightParams(weights).replace(/^&/, "") : ""
+        }`
       ),
   },
 
-  // 路線関連
-  lines: {
-    // 路線の駅一覧を取得
-    stations: async ({ line_name, company }: LineStationsParams) =>
-      fetchApi<{ stations: Station[]; total: number }>(
-        `api/lines/stations?line_name=${encodeURIComponent(
-          line_name
-        )}&company=${encodeURIComponent(company)}`
-      ),
-  },
+  // 路線関連 (廃止予定だが、互換性のため残すか、削除するか。今回は削除してstationsに統合)
 
   // XYZ関連
   xyz: {

@@ -4,7 +4,8 @@
  * - データの正規化とキャッシュ機能
  */
 
-import { getMLITClient, type MLITDIDGeoJSON } from "@/lib/external-apis/mlit";
+// Local implementation replacing deleted external-apis/mlit.ts
+import { type MLITDIDGeoJSON } from "./types";
 
 export class MLITDIDLayerClient {
   private cache = new Map<string, MLITDIDGeoJSON>();
@@ -27,13 +28,24 @@ export class MLITDIDLayerClient {
     }
 
     try {
-      const client = getMLITClient();
+      // Use Next.js API Route Proxy
+      // GET /api/mlit/did?z=...&x=...&y=...
 
-      // デバッグログ
-      console.log("MLIT Client center:", center);
-      console.log("MLIT Client zoom:", zoom);
+      const xyzRes = await fetch(
+        `/api/xyz/lon-lat-to-xyz?lon=${center.lng}&lat=${
+          center.lat
+        }&z=${Math.floor(zoom)}`
+      );
+      if (!xyzRes.ok) throw new Error("Failed to convert coords");
+      const { x, y, z } = await xyzRes.json();
 
-      const data = await client.getDIDDataForMapView(center, zoom);
+      const url = `/api/mlit/did?z=${z}&x=${x}&y=${y}&response_format=geojson`;
+
+      console.log("Fetching MLIT DID from:", url);
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`MLIT API Error: ${res.status}`);
+
+      const data = await res.json();
 
       // データを正規化
       const normalizedData = this.normalizeDIDData(data);

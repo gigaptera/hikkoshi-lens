@@ -27,6 +27,8 @@ import {
 } from "@/services/station/api";
 import { Line } from "@/types/station";
 import { useLineStore } from "@/stores/lineStore";
+import { usePreferenceStore } from "@/stores/preferenceStore";
+import Link from "next/link";
 
 // 画面のみ（データはモック）。
 // work=lat,lng を受け取り、勤務先に近い順で路線（最大10件）を表示。
@@ -34,6 +36,7 @@ import { useLineStore } from "@/stores/lineStore";
 export default function Lines() {
   const router = useRouter();
   const workLocation = useLocationStore((state) => state.workLocation);
+  const weights = usePreferenceStore((state) => state.weights);
 
   const [lines, setLines] = useState<Line[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +52,9 @@ export default function Lines() {
       try {
         const stations = await fetchNearbyStations(
           workLocation.lat,
-          workLocation.lng
+          workLocation.lng,
+          3000,
+          weights
         );
         const groupedLines = groupStationsByLine(stations);
         setLines(groupedLines);
@@ -62,15 +67,16 @@ export default function Lines() {
     };
 
     loadNearbyStations();
-  }, [workLocation]);
+  }, [workLocation, weights]);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-4 grid gap-4 min-h-[calc(100vh-4rem)] mt-16">
-      {/* Breadcrumbs */}
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            <BreadcrumbLink asChild>
+              <Link href="/">Home</Link>
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
@@ -81,9 +87,9 @@ export default function Lines() {
 
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-xl font-semibold">対象路線（勤務先に近い順）</h1>
+          <h1 className="text-xl font-semibold">対象路線 (おすすめ順)</h1>
           <p className="text-sm text-muted-foreground">
-            最大10件を表示します。距離は勤務先からの最短距離の目安です。
+            あなたの重視するポイント（重み）に基づいてスコア計算し、おすすめ順に表示します。
           </p>
         </div>
       </div>
@@ -111,8 +117,8 @@ export default function Lines() {
             <ul className="divide-y">
               {lines.map((line, i) => (
                 <li key={line.id} className="py-3 flex items-center gap-4">
-                  <div className="w-8 text-sm text-muted-foreground tabular-nums">
-                    {i + 1}
+                  <div className="w-8 text-sm text-muted-foreground tabular-nums font-bold">
+                    #{i + 1}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-4">
@@ -129,6 +135,17 @@ export default function Lines() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
+                    {/* Score Badge */}
+                    {line.stations[0].total_score !== undefined && (
+                      <div className="flex flex-col items-end mr-2">
+                        <span className="text-[10px] text-muted-foreground">
+                          Score
+                        </span>
+                        <span className="font-bold tabular-nums text-lg text-primary">
+                          {line.stations[0].total_score.toFixed(0)}
+                        </span>
+                      </div>
+                    )}
                     <Badge
                       variant="outline"
                       className="tabular-nums text-base px-3 py-1"
@@ -138,9 +155,13 @@ export default function Lines() {
                     <Button
                       onClick={() => {
                         // 路線詳細ページに遷移
-                        router.push(
-                          `/lines/line/?lineName=${line.line_name}&company=${line.company}`
-                        );
+                        // 詳細ページに遷移（起点となる最寄り駅のIDを渡す）
+                        const nearestStation = line.stations[0];
+                        if (nearestStation) {
+                          router.push(
+                            `/lines/line/?stationId=${nearestStation.id}`
+                          );
+                        }
                       }}
                     >
                       この路線を見る <ArrowRight className="ml-2 h-4 w-4" />
