@@ -8,7 +8,7 @@ import (
 )
 
 type StationUsecase interface {
-	GetNearbyStations(ctx context.Context, lat, lon float64, radiusMeter int, weights map[string]int) ([]*domain.Station, error)
+	GetNearbyStations(ctx context.Context, lat, lon float64, filter domain.StationFilter) ([]*domain.Station, error)
 	GetStationsWithinThreeStops(ctx context.Context, stationID int64, weights map[string]int) ([]*domain.Station, error)
 }
 
@@ -21,16 +21,127 @@ func NewStationUsecase(repo domain.StationRepository, scoring *service.ScoringSe
 	return &stationUsecase{repo: repo, scoring: scoring}
 }
 
-func (u *stationUsecase) GetNearbyStations(ctx context.Context, lat, lon float64, radiusMeter int, weights map[string]int) ([]*domain.Station, error) {
-	stations, err := u.repo.GetNearby(ctx, lat, lon, radiusMeter)
+func (u *stationUsecase) GetNearbyStations(ctx context.Context, lat, lon float64, filter domain.StationFilter) ([]*domain.Station, error) {
+	// 1. まず半径内の駅（最寄り駅）を取得
+	nearbyStations, err := u.repo.GetNearby(ctx, lat, lon, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	// Calculate scores
-	u.scoring.CalculateScores(stations, weights)
+	// すべての駅をマップで管理（重複削除のため）
+	stationMap := make(map[int64]*domain.Station)
 
-	return stations, nil
+	// 最寄り駅をマップに追加（IsNearby = true）
+	for _, station := range nearbyStations {
+		station.IsNearby = true
+		station.SourceStation = ""
+		station.StopsFromSource = 0
+		stationMap[station.ID] = station
+	}
+
+	// 2. 家賃補助適用の場合、前後N駅を追加取得
+	if filter.SubsidyType == "from_workplace" && len(nearbyStations) > 0 {
+		subsidyRange := filter.SubsidyRange
+		if subsidyRange <= 0 {
+			subsidyRange = 3 // デフォルト
+		}
+
+		// 各最寄り駅について、その路線の駅を取得
+		for _, nearbyStation := range nearbyStations {
+			// 同じ路線の全駅を取得
+			lineStations, err := u.repo.GetByLine(ctx, nearbyStation.OrganizationCode, nearbyStation.LineName)
+			if err != nil {
+				continue // エラーは無視して次の駅へ
+			}
+
+			// 最寄り駅の位置を探す
+			nearbyIndex := -1
+			for i, ls := range lineStations {
+				if ls.ID == nearbyStation.ID {
+					nearbyIndex = i
+					break
+				}
+			}
+
+			if nearbyIndex == -1 {
+				continue
+			}
+
+			// 前後N駅の範囲を計算
+			startIndex := nearbyIndex - subsidyRange
+			if startIndex < 0 {
+				startIndex = 0
+			}
+			endIndex := nearbyIndex + subsidyRange
+			if endIndex >= len(lineStations) {
+				endIndex = len(lineStations) - 1
+			}
+
+			// 前後の駅を追加
+			for i := startIndex; i <= endIndex; i++ {
+				station := lineStations[i]
+
+				// 既に存在する場合はスキップ
+				if _, exists := stationMap[station.ID]; exists {
+					continue
+				}
+
+				// 駅数を計算（絶対値）
+				stopsFromSource := i - nearbyIndex
+				if stopsFromSource < 0 {
+					stopsFromSource = -stopsFromSource
+				}
+
+				// 新しい駅を追加
+				station.IsNearby = false
+				station.SourceStation = nearbyStation.Name
+				station.StopsFromSource = stopsFromSource
+
+				// MarketPricesもフィルタリング
+				if filter.BuildingType != "" && filter.Layout != "" {
+					filteredPrices := []*domain.MarketPrice{}
+					for _, mp := range station.MarketPrices {
+						if mp.BuildingType == filter.BuildingType && mp.Layout == filter.Layout {
+							// 家賃範囲チェック
+							if (filter.MinRent <= 0 || mp.Rent >= filter.MinRent) &&
+								(filter.MaxRent <= 0 || mp.Rent <= filter.MaxRent) {
+								filteredPrices = append(filteredPrices, mp)
+							}
+						}
+					}
+					station.MarketPrices = filteredPrices
+				}
+
+				stationMap[station.ID] = station
+			}
+		}
+	}
+
+	// 3. マップからスライスに変換
+	allStations := make([]*domain.Station, 0, len(stationMap))
+	for _, station := range stationMap {
+		allStations = append(allStations, station)
+	}
+
+	// 4. スコア計算
+	if filter.CalculateScores {
+		u.scoring.CalculateScores(allStations, filter.Weights)
+	}
+
+	// 5. 家賃相場を設定
+	if filter.BuildingType != "" && filter.Layout != "" {
+		for _, station := range allStations {
+			// フィルター条件に完全一致するMarketPriceを探す
+			for _, mp := range station.MarketPrices {
+				if mp.BuildingType == filter.BuildingType && mp.Layout == filter.Layout {
+					station.RentAvg = mp.Rent
+					break
+				}
+			}
+		}
+	}
+
+	return allStations, nil
 }
 
 func (u *stationUsecase) GetStationsWithinThreeStops(ctx context.Context, stationID int64, weights map[string]int) ([]*domain.Station, error) {
@@ -125,9 +236,15 @@ func (u *stationUsecase) GetStationsWithinThreeStops(ctx context.Context, statio
 	// No, I can't edit multiple files properly in sequence without risk.
 	// Let's assume I will fix ScoringService.
 
-	// For now, let's just call CalculateScores. Restoring order is secondary for MVP,
-	// or I can fix ScoringService in the next step.
+	// ScoringServiceはin-placeでソートする可能性があるが、
+	// このメソッドは駅順序を維持すべき（前後3駅の順序）
+	// 現状では計算のみ実施
 	u.scoring.CalculateScores(result, weights)
+
+	// TODO: 家賃相場の設定
+	// GetNearbyStationsと同様に、フィルター条件に応じた家賃相場を設定したいが、
+	// 現在このメソッドはweightsのみを受け取っており、BuildingTypeとLayoutの情報がない。
+	// 将来的にはfilter全体を引数で受け取るように修正する必要がある。
 
 	return result, nil
 }
