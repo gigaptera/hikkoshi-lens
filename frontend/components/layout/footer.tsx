@@ -1,13 +1,36 @@
 "use client";
 
-import { useUiStore } from "@/features/ui/stores/ui-store";
+import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function Footer() {
-  const toggle = useUiStore((s) => s.toggleFooter);
-
   return (
-    <footer className="h-fit fixed bottom-0 w-fit flex items-center p-2 bg-white/50 backdrop-blur-sm rounded-tr-lg z-10">
-      <p className="text-neutral-500 text-xs">&copy; 2025 hikkoshilens.</p>
+    <footer
+      className={cn(
+        "mt-12 border-t border-border",
+        "bg-card/60 backdrop-blur-sm"
+      )}
+    >
+      <div className="max-w-7xl mx-auto px-4 md:px-6 py-8 flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
+        <div className="text-xs text-neutral-500">
+          <div className="font-black tracking-tighter text-neutral-900">
+            HIKKOSHI LENS
+          </div>
+          <div className="font-mono">© 2025 hikkoshilens.</div>
+        </div>
+
+        <nav className="flex items-center gap-4 text-xs font-bold uppercase tracking-widest text-neutral-500">
+          <Link href="/search" className="hover:text-neutral-900 transition-colors">
+            検索
+          </Link>
+          <Link href="/stations" className="hover:text-neutral-900 transition-colors">
+            駅
+          </Link>
+          <Link href="/lines" className="hover:text-neutral-900 transition-colors">
+            路線
+          </Link>
+        </nav>
+      </div>
     </footer>
   );
 }

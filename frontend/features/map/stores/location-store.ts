@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 interface LocationState {
   workLocation: {
@@ -11,7 +12,14 @@ interface LocationState {
   ) => void;
 }
 
-export const useLocationStore = create<LocationState>((set) => ({
-  workLocation: null,
-  setWorkLocation: (location) => set({ workLocation: location }),
-}));
+export const useLocationStore = create<LocationState>()(
+  persist(
+    (set) => ({
+      workLocation: null,
+      setWorkLocation: (location) => set({ workLocation: location }),
+    }),
+    {
+      name: "hikkoshilens-location",
+    }
+  )
+);

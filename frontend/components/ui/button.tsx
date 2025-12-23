@@ -5,27 +5,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-semibold rounded-xl ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground hover:bg-orange-600 shadow-[2px_2px_0px_rgba(0,0,0,0.15)] active:translate-y-[1px] active:shadow-none border border-transparent", // Concrete/Safety Orange Slab
+          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:translate-y-[1px] active:shadow-none border border-transparent",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
-          "border border-neutral-400 bg-transparent hover:border-primary hover:text-primary transition-colors", // Steel Frame
+          "border border-border bg-card hover:border-primary hover:text-primary transition-colors",
         secondary:
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
-          "hover:bg-neutral-200 hover:text-neutral-900 border border-transparent hover:border-neutral-300", // Etched
-        link: "text-primary underline-offset-4 hover:underline",
+          "hover:bg-muted hover:text-foreground border border-transparent",
+        link: "text-primary underline-offset-4 hover:underline px-0",
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 px-3",
-        lg: "h-11 px-8",
-        icon: "h-10 w-10",
+        sm: "h-9 px-3 text-xs",
+        lg: "h-11 px-6 text-base",
+        icon: "h-10 w-10 p-0",
       },
     },
     defaultVariants: {

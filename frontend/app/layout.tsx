@@ -4,6 +4,8 @@ import "./globals.css";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { ConcreteBackground } from "@/components/layout/concrete-background";
 import { IconProvider } from "@/components/providers/icon-provider";
+import { AppShell } from "@/components/layout/app-shell";
+import { ThemeProvider } from "@/components/layout/theme-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 const notoSansJP = Noto_Sans_JP({
@@ -22,13 +24,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja">
+    <html lang="ja" suppressHydrationWarning>
       <body
         className={`${inter.className} ${notoSansJP.className} antialiased`}
       >
-        <IconProvider>
-          <ConcreteBackground>{children}</ConcreteBackground>
-        </IconProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <ConcreteBackground>
+            <IconProvider>
+              <AppShell>{children}</AppShell>
+            </IconProvider>
+          </ConcreteBackground>
+        </ThemeProvider>
       </body>
     </html>
   );

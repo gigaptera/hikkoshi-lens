@@ -32,6 +32,47 @@
   --color-teal-800: oklch(0.35 0.1 190);
   --color-teal-900: oklch(0.25 0.08 190);
 
+  /* App semantic tokens (Tailwind v4 uses --color-*) */
+  --color-background: var(--color-neutral-200); /* Wall */
+  --color-foreground: var(--color-neutral-900); /* Ink */
+
+  --color-card: var(--color-neutral-100); /* Panel */
+  --color-card-foreground: var(--color-neutral-900);
+
+  --color-popover: var(--color-neutral-100);
+  --color-popover-foreground: var(--color-neutral-900);
+
+  --color-primary: var(--color-teal-500); /* Scientific Teal */
+  --color-primary-foreground: var(--color-neutral-50);
+
+  /* Primary scale (so bg-primary-50 などが効く) */
+  --color-primary-50: var(--color-teal-50);
+  --color-primary-100: var(--color-teal-100);
+  --color-primary-200: var(--color-teal-200);
+  --color-primary-300: var(--color-teal-300);
+  --color-primary-400: var(--color-teal-400);
+  --color-primary-500: var(--color-teal-500);
+  --color-primary-600: var(--color-teal-600);
+  --color-primary-700: var(--color-teal-700);
+  --color-primary-800: var(--color-teal-800);
+  --color-primary-900: var(--color-teal-900);
+
+  --color-secondary: var(--color-neutral-300);
+  --color-secondary-foreground: var(--color-neutral-900);
+
+  --color-muted: var(--color-neutral-300);
+  --color-muted-foreground: var(--color-neutral-600);
+
+  --color-accent: var(--color-teal-500);
+  --color-accent-foreground: var(--color-neutral-50);
+
+  --color-destructive: oklch(0.36 0.15 29);
+  --color-destructive-foreground: var(--color-neutral-50);
+
+  --color-border: var(--color-neutral-400); /* Structural Divider */
+  --color-input: var(--color-neutral-400);
+  --color-ring: var(--color-teal-500);
+
   /* Spacing - Fibonacci */
   --spacing-2: 0.5rem;
   --spacing-3: 0.8125rem;
@@ -47,60 +88,59 @@
   --font-size-3xl: 4.236rem;
 
   /* Radius - Absolute Zero */
+  /* Radius - friendly */
   --radius-none: 0;
-  --radius-sm: 0;
-  --radius-md: 0;
-  --radius-lg: 0;
-  --radius-xl: 0;
-  --radius-2xl: 0;
-  --radius-full: 0;
-  --radius-DEFAULT: 0;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  --radius-DEFAULT: 0.75rem;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 :root {
-  /* Concrete Theme Mapping */
-  --background: var(--color-neutral-200); /* Wall */
-  --foreground: var(--color-neutral-900); /* Ink */
-
-  --card: var(--color-neutral-100); /* Panel */
-  --card-foreground: var(--color-neutral-900);
-
-  --popover: var(--color-neutral-100);
-  --popover-foreground: var(--color-neutral-900);
-
-  --primary: var(--color-teal-500); /* Scientific Teal */
-  --primary-foreground: var(--color-neutral-50);
-
-  --secondary: var(--color-neutral-300);
-  --secondary-foreground: var(--color-neutral-900);
-
-  --muted: var(--color-neutral-300);
-  --muted-foreground: var(--color-neutral-600);
-
-  --accent: var(--color-teal-500);
-  --accent-foreground: var(--color-neutral-50);
-
-  --destructive: oklch(0.36 0.15 29);
-  --destructive-foreground: oklch(0.98 0.002 240);
-
-  --border: var(--color-neutral-400); /* Structural Divider */
-  --input: var(--color-neutral-400);
-  --ring: var(--color-teal-500);
-
-  --radius: 0;
-}
-
-/* Sharp reset */
-* {
-  border-radius: 0 !important;
+  /* shadcn互換変数（必要なものだけ） */
+  --radius: 0.75rem;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--color-background);
+  color: var(--color-foreground);
   font-family: "Inter", "Noto Sans JP", sans-serif;
   -webkit-font-smoothing: antialiased;
   position: relative;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Dark theme */
+.dark {
+  --color-background: oklch(0.18 0.01 240);
+  --color-foreground: oklch(0.98 0.002 240);
+
+  --color-card: oklch(0.22 0.01 240);
+  --color-card-foreground: oklch(0.98 0.002 240);
+
+  --color-popover: oklch(0.22 0.01 240);
+  --color-popover-foreground: oklch(0.98 0.002 240);
+
+  --color-secondary: oklch(0.28 0.01 240);
+  --color-secondary-foreground: oklch(0.98 0.002 240);
+
+  --color-muted: oklch(0.28 0.01 240);
+  --color-muted-foreground: oklch(0.75 0.01 240);
+
+  --color-border: oklch(0.35 0.01 240);
+  --color-input: oklch(0.35 0.01 240);
 }
 
 /* Utilities for Concrete Theme */

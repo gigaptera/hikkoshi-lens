@@ -10,17 +10,18 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Panel } from "@/components/ui/panel";
 import {
-  MapPin,
   ArrowLeft,
-  HouseLine,
-  Buildings,
   ShieldWarning,
+  Train,
+  ChartBar,
+  CurrencyJpy,
 } from "@phosphor-icons/react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { useLocationStore } from "@/features/map/stores/location-store";
 import { cn } from "@/lib/utils";
 import { usePreferenceStore } from "@/features/lines/stores/preference-store";
+import { CompactPageHeader } from "@/components/layout/compact-page-header";
 
 export default function LinePage() {
   const searchParams = useSearchParams();
@@ -58,7 +59,7 @@ export default function LinePage() {
 
     const map = new mapboxgl.Map({
       container: "detail-map",
-      style: "mapbox://styles/mapbox/light-v11", // Light map for Concrete theme
+      style: "mapbox://styles/mapbox/light-v11",
       center: targetStation.coordinates
         ? [targetStation.coordinates.lng, targetStation.coordinates.lat]
         : [139.76, 35.68],
@@ -68,7 +69,7 @@ export default function LinePage() {
 
     map.on("load", () => {
       if (targetStation.coordinates) {
-        new mapboxgl.Marker({ color: "#404040" }) // Dark Grey
+        new mapboxgl.Marker({ color: "oklch(0.65 0.16 190)" })
           .setLngLat([
             targetStation.coordinates.lng,
             targetStation.coordinates.lat,
@@ -95,178 +96,188 @@ export default function LinePage() {
 
   if (!stationIdStr || loading || !targetStation) {
     return (
-      <div className="min-h-screen bg-neutral-200 flex items-center justify-center text-neutral-500 font-mono">
-        データ読み込み中...
+      <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-primary-50/20 flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3 animate-pulse">
+            <Train size={24} weight="bold" className="text-primary" />
+          </div>
+          <div className="text-sm font-bold text-neutral-700">データ読み込み中...</div>
+        </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-neutral-200 text-neutral-900 font-sans p-8 md:p-13 grid gap-8">
-      {/* Navigation */}
-      <nav className="flex items-center gap-4 text-sm text-neutral-500">
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="text-neutral-500 hover:text-neutral-900 px-0 gap-2 hover:bg-transparent"
-        >
-          <ArrowLeft className="w-4 h-4" /> ランキングに戻る
-        </Button>
-      </nav>
+    <div className="min-h-screen bg-gradient-to-br from-neutral-50 to-primary-50/20 p-3 md:p-4">
+      <div className="max-w-7xl mx-auto space-y-3">
+        {/* Navigation */}
+        <nav className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => router.back()}
+            className="gap-1.5 text-xs h-8"
+          >
+            <ArrowLeft className="w-3 h-3" weight="bold" /> 戻る
+          </Button>
+        </nav>
 
-      {/* Main Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Col: Station Info (Panel) */}
-        <div className="lg:col-span-8 space-y-8">
-          <Panel variant="solid" className="!p-0 overflow-hidden min-h-[400px]">
-            <div className="h-[400px] w-full relative group">
-              <div
-                id="detail-map"
-                className="w-full h-full grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
-              />
-              <div className="absolute top-6 left-6 pointer-events-none">
-                <span className="bg-black text-white text-[10px] font-bold px-2 py-1 uppercase tracking-widest inline-block mb-2">
-                  駅詳細情報
-                </span>
-                <div className="bg-white/90 backdrop-blur px-6 py-4 shadow-sm border border-white/40">
-                  <div className="text-xs font-bold tracking-widest uppercase text-neutral-400 mb-1">
-                    {targetStation.line_name} 線
+        {/* Main Grid - コンパクト */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3">
+          {/* Left Col */}
+          <div className="space-y-3">
+            {/* Map Panel - 小さく */}
+            <Panel variant="glass" className="overflow-hidden">
+              <div className="h-[250px] w-full relative group">
+                <div
+                  id="detail-map"
+                  className="w-full h-full grayscale-[20%] group-hover:grayscale-0 transition-[filter] duration-300"
+                />
+                <div className="absolute top-3 left-3 pointer-events-none">
+                  <div className="bg-white/95 backdrop-blur-sm px-4 py-2 rounded-lg shadow-md border border-white/40">
+                    <Badge variant="secondary" className="mb-1 h-4 text-[9px]">
+                      {targetStation.line_name} 線
+                    </Badge>
+                    <h1 className="text-2xl font-black tracking-tight text-neutral-900">
+                      {targetStation.name}
+                    </h1>
                   </div>
-                  <h1 className="text-4xl font-black tracking-tighter text-neutral-900">
-                    {targetStation.name}
-                  </h1>
                 </div>
               </div>
-            </div>
-          </Panel>
+            </Panel>
 
-          {/* Hazard Info Panel */}
-          <Panel
-            variant="solid"
-            className="border-l-4 border-l-red-500 bg-neutral-50"
-          >
-            <div className="flex items-center gap-2 mb-4 text-red-600">
-              <ShieldWarning className="w-5 h-5" weight="fill" />
-              <span className="text-xs font-bold uppercase tracking-widest">
-                防災・ハザード情報 (AI分析推定)
-              </span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase text-neutral-400">
-                  洪水リスク
-                </span>
-                <div className="text-lg font-black text-neutral-800 flex items-center gap-2">
-                  低{" "}
-                  <span className="text-xs font-normal text-neutral-500 bg-green-100 text-green-700 px-1 py-0.5 rounded">
-                    Level 1
+            {/* Hazard - コンパクト */}
+            <Panel variant="solid" className="border-l-4 border-l-red-500 bg-red-50/30 p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 bg-red-100 rounded-lg flex items-center justify-center">
+                  <ShieldWarning size={14} className="text-red-600" weight="fill" />
+                </div>
+                <div className="text-[10px] font-bold text-red-600 uppercase tracking-wider">
+                  防災・ハザード情報 (AI分析推定)
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3 text-xs">
+                <div>
+                  <div className="text-[9px] font-bold uppercase text-neutral-500 mb-0.5">
+                    洪水リスク
+                  </div>
+                  <div className="text-lg font-black text-neutral-900">
+                    低 <Badge variant="success" className="text-[8px] h-3.5 px-1">L1</Badge>
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-bold uppercase text-neutral-500 mb-0.5">
+                    地盤揺れ
+                  </div>
+                  <div className="text-lg font-black text-neutral-900">普通</div>
+                </div>
+                <div>
+                  <div className="text-[9px] font-bold uppercase text-neutral-500 mb-0.5">
+                    避難場所
+                  </div>
+                  <div className="text-lg font-black text-neutral-900">徒歩5分 (2)</div>
+                </div>
+              </div>
+            </Panel>
+
+            {/* Comparison - コンパクト */}
+            <Panel variant="solid" className="p-3">
+              <div className="flex items-center gap-2 mb-2 pb-2 border-b border-border">
+                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <ChartBar weight="bold" size={14} className="text-primary" />
+                </div>
+                <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  周辺駅との比較
+                </div>
+              </div>
+              <StationComparison
+                stations={
+                  comparisonList.length > 0
+                    ? comparisonList
+                    : [
+                        targetStation,
+                        ...stations
+                          .filter((s) => s.id !== targetStation.id)
+                          .slice(0, 2),
+                      ]
+                }
+                onRemove={(id) =>
+                  setComparisonList((prev) => prev.filter((s) => s.id !== id))
+                }
+              />
+            </Panel>
+          </div>
+
+          {/* Right Col - コンパクト */}
+          <div className="space-y-3">
+            {/* Score Panel */}
+            <Panel variant="glass" className="border-2 border-primary-200 p-3">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+                <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
+                  <ChartBar weight="fill" size={14} className="text-white" />
+                </div>
+                <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  総合スコア
+                </div>
+              </div>
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <div className="text-5xl font-black text-primary tabular-nums tracking-tighter leading-none">
+                    {targetStation.total_score?.toFixed(0)}
+                  </div>
+                  <div className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mt-1">
+                    TOTAL
+                  </div>
+                </div>
+                <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <span className="font-black text-xl text-primary">A</span>
+                </div>
+              </div>
+              <div className="h-40 w-full -ml-4">
+                <StationRadarChart
+                  scoreDetails={targetStation.score_details || {}}
+                />
+              </div>
+            </Panel>
+
+            {/* Rent Panel */}
+            <Panel variant="solid" className="border-l-4 border-l-primary p-3">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border">
+                <div className="w-7 h-7 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <CurrencyJpy weight="bold" size={14} className="text-primary" />
+                </div>
+                <div className="text-xs font-bold text-neutral-500 uppercase tracking-wider">
+                  家賃情報
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-[9px] text-neutral-500 uppercase font-bold tracking-wider mb-1">
+                    実質家賃 (1LDK)
+                  </div>
+                  <div className={cn(
+                    "text-4xl font-mono font-black tracking-tight text-neutral-900 leading-none"
+                  )}>
+                    ¥{rentInfo?.effectiveRent.toLocaleString()}
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-end text-xs text-neutral-500 font-mono border-t border-border pt-2">
+                  <span className="font-bold">平均家賃</span>
+                  <span className="line-through decoration-neutral-300 text-base font-bold">
+                    ¥{rentInfo?.marketRent.toLocaleString()}
                   </span>
                 </div>
               </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase text-neutral-400">
-                  地盤揺れやすさ
-                </span>
-                <div className="text-lg font-black text-neutral-800">普通</div>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold uppercase text-neutral-400">
-                  避難場所
-                </span>
-                <div className="text-lg font-black text-neutral-800">
-                  徒歩5分圏内 (2)
+              {rentInfo?.isSubsidized && (
+                <div className="mt-3 py-2 px-3 bg-primary-50 rounded-lg text-xs text-primary-700 font-bold flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse"></div>
+                  家賃補助適用
                 </div>
-              </div>
-            </div>
-            <div className="mt-4 pt-3 border-t border-neutral-200 text-[10px] text-neutral-400 leading-relaxed">
-              ※
-              このデータは公的機関のオープンデータを基にした推定値です。契約前に必ず重要事項説明書をご確認ください。
-            </div>
-          </Panel>
-
-          {/* Comparison Panel */}
-          <Panel variant="steel" title="周辺駅との比較">
-            <StationComparison
-              stations={
-                comparisonList.length > 0
-                  ? comparisonList
-                  : [
-                      targetStation,
-                      ...stations
-                        .filter((s) => s.id !== targetStation.id)
-                        .slice(0, 2),
-                    ]
-              }
-              onRemove={(id) =>
-                setComparisonList((prev) => prev.filter((s) => s.id !== id))
-              }
-            />
-          </Panel>
-        </div>
-
-        {/* Right Col: Metrics (Panels) */}
-        <div className="lg:col-span-4 space-y-8">
-          {/* Score Panel */}
-          <Panel variant="glass" title="総合スコア" accent>
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <div className="text-6xl font-black text-primary tabular-nums tracking-tighter mt-2">
-                  {targetStation.total_score?.toFixed(0)}
-                </div>
-                <div className="text-xs font-bold uppercase tracking-widest text-neutral-400 mt-1">
-                  総合評価
-                </div>
-              </div>
-              <div className="w-12 h-12 bg-neutral-100 border border-neutral-200 flex items-center justify-center">
-                <span className="font-bold text-lg text-neutral-900">A</span>
-              </div>
-            </div>
-            <div className="h-48 w-full -ml-4 relative">
-              {/* Using Recharts component but it might need styling update to match SVG look */}
-              <StationRadarChart
-                scoreDetails={targetStation.score_details || {}}
-              />
-            </div>
-          </Panel>
-
-          {/* Rent Panel */}
-          <Panel variant="solid" className="border-l-4 border-l-neutral-800">
-            <div className="flex items-center gap-2 mb-6 text-neutral-500 border-b border-neutral-200 pb-2 border-dashed">
-              <HouseLine className="w-5 h-5" />
-              <span className="text-xs font-bold uppercase tracking-widest">
-                家賃情報
-              </span>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <div className="text-[10px] text-neutral-400 uppercase font-bold tracking-wider mb-1">
-                  実質家賃 (1LDK)
-                </div>
-                <div
-                  className={cn(
-                    "text-5xl font-mono font-bold tracking-tighter text-neutral-900"
-                  )}
-                >
-                  ¥{rentInfo?.effectiveRent.toLocaleString()}
-                </div>
-              </div>
-
-              <div className="flex justify-between items-end text-sm text-neutral-500 font-mono border-t border-neutral-100 pt-3">
-                <span>平均家賃（相場）</span>
-                <span className="line-through decoration-neutral-300">
-                  ¥{rentInfo?.marketRent.toLocaleString()}
-                </span>
-              </div>
-            </div>
-            {rentInfo?.isSubsidized && (
-              <div className="mt-6 py-2 px-3 bg-primary-50 text-xs text-primary-700 font-bold tracking-wide uppercase flex items-center gap-2">
-                <div className="w-2 h-2 bg-primary-500 rounded-full animate-pulse"></div>
-                家賃補助適用
-              </div>
-            )}
-          </Panel>
+              )}
+            </Panel>
+          </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

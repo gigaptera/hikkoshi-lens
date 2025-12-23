@@ -2,6 +2,7 @@ import { usePreferenceStore } from "@/features/lines/stores/preference-store";
 import { Panel } from "@/components/ui/panel";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Faders,
   X,
@@ -12,6 +13,7 @@ import {
   Gift,
   MapPinLine,
   Train,
+  Info,
 } from "@phosphor-icons/react";
 
 export function ConcreteFilters() {
@@ -33,9 +35,42 @@ export function ConcreteFilters() {
     });
   };
 
+  // 家賃補助の一般的なプリセット
+  const subsidyPresets = [
+    { type: "none", label: "なし", value: 0, desc: "家賃補助なし" },
+    {
+      type: "distance",
+      label: "会社から2km",
+      value: 2,
+      amount: 3,
+      desc: "よくあるパターン",
+    },
+    {
+      type: "distance",
+      label: "会社から3km",
+      value: 3,
+      amount: 3,
+      desc: "標準的",
+    },
+    {
+      type: "stops",
+      label: "最寄りから3駅",
+      value: 3,
+      amount: 3,
+      desc: "人気の条件",
+    },
+    {
+      type: "stops",
+      label: "最寄りから5駅",
+      value: 5,
+      amount: 3,
+      desc: "広範囲",
+    },
+  ];
+
   return (
-    <Panel variant="steel" className="space-y-6">
-      <div className="flex items-center justify-between border-b border-neutral-300 pb-4">
+    <Panel variant="steel" className="space-y-4">
+      <div className="flex items-center justify-between border-b border-neutral-300 pb-3">
         <div className="flex items-center gap-2">
           <Faders weight="light" className="w-4 h-4 text-primary" />
           <span className="text-sm font-bold uppercase tracking-widest text-neutral-600">
@@ -53,8 +88,8 @@ export function ConcreteFilters() {
       </div>
 
       {/* Building Type & Layout - Button Style */}
-      <div className="space-y-4">
-        <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 pb-2 flex items-center gap-2">
+      <div className="space-y-3">
+        <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 pb-1.5 flex items-center gap-2">
           <Buildings weight="light" size={16} /> 物件スペック
         </h4>
 
@@ -88,7 +123,7 @@ export function ConcreteFilters() {
                   key={l}
                   disabled={!filters.buildingType}
                   onClick={() => setFilters({ layout: isActive ? "" : val })}
-                  className={`text-[10px] font-bold px-3 py-1.5 border rounded-sm transition-all ${
+                  className={`text-[10px] font-bold px-1.5 py-1.5 border rounded-sm transition-all ${
                     !filters.buildingType
                       ? "bg-neutral-50 text-neutral-300 border-neutral-200 cursor-not-allowed"
                       : isActive
@@ -122,7 +157,7 @@ export function ConcreteFilters() {
                   onClick={() =>
                     setFilters({ buildingType: isActive ? "" : t.val })
                   }
-                  className={`flex-1 text-[10px] font-bold px-3 py-1.5 border rounded-sm transition-all flex items-center justify-center gap-2 ${
+                  className={`flex-1 text-[10px] font-bold px-1.5 py-1.5 border rounded-sm transition-all flex items-center justify-center gap-2 ${
                     isActive
                       ? "bg-neutral-800 text-white border-neutral-800"
                       : "bg-white text-neutral-500 border-neutral-200 hover:border-neutral-400"
@@ -143,12 +178,12 @@ export function ConcreteFilters() {
       </div>
 
       {/* Budget & Subsidy Section */}
-      <div className="space-y-4 pt-4 border-t border-dashed border-neutral-300">
-        <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 pb-2 flex items-center gap-2">
+      <div className="space-y-3 pt-3 border-t border-dashed border-neutral-300">
+        <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 pb-1.5 flex items-center gap-2">
           <CurrencyJpy weight="light" size={16} /> 予算・補助
         </h4>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-3">
           {/* Max Rent - Step 3 (Optional) */}
           <div
             className={
@@ -197,10 +232,10 @@ export function ConcreteFilters() {
             </div>
           </div>
 
-          {/* Subsidy */}
+          {/* Subsidy Amount */}
           <div>
             <label className="text-[10px] text-neutral-500 font-bold mb-1 flex items-center gap-1">
-              <Gift weight="light" size={14} /> 家賃補助
+              <Gift weight="light" size={14} /> 家賃補助額
             </label>
             <div className="flex items-baseline border-b border-neutral-300 pb-1 focus-within:border-teal-500 transition-colors">
               <input
@@ -224,79 +259,154 @@ export function ConcreteFilters() {
         </div>
       </div>
 
-      {/* Subsidy Condition Section */}
-      <div className="space-y-4 pt-4 border-t border-dashed border-neutral-300">
-        <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest border-b border-neutral-100 pb-2 flex items-center gap-2">
-          <MapPinLine weight="light" size={16} /> 適用条件
-        </h4>
+      {/* Subsidy Condition Section - 改善版 */}
+      <div className="space-y-3 pt-3 border-t border-dashed border-neutral-300">
+        <div className="flex items-center justify-between">
+          <h4 className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest flex items-center gap-1.5">
+            <MapPinLine weight="light" size={16} /> 適用条件
+          </h4>
+          <div className="group relative">
+            <Info size={14} className="text-neutral-400 cursor-help" />
+            <div className="hidden group-hover:block absolute right-0 top-6 w-64 bg-white border-2 border-primary-200 rounded-lg shadow-lg p-2.5 text-xs text-neutral-700 z-50">
+              <div className="font-bold text-primary mb-2">よくある条件例</div>
+              <ul className="space-y-1 text-[10px]">
+                <li>• 会社から2〜3km圏内</li>
+                <li>• 最寄り駅から3〜5駅以内</li>
+                <li>• 補助額は月2〜5万円が一般的</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
-        <div className="bg-neutral-50 p-3 rounded-md border border-neutral-100 space-y-3">
-          <div className="flex bg-white rounded border border-neutral-200 p-0.5">
-            {[
-              { label: "なし", val: "none" },
-              { label: "勤務地", val: "distance", icon: Buildings },
-              { label: "最寄り", val: "stops", icon: Train },
-            ].map((type) => (
-              <button
-                key={type.val}
-                onClick={() =>
-                  setSubsidy({
-                    ...subsidy,
-                    conditionType: type.val as "none" | "distance" | "stops",
-                  })
-                }
-                className={`flex-1 text-[10px] px-2 py-1 rounded-sm font-bold transition-all flex items-center justify-center gap-1 ${
-                  subsidy.conditionType === type.val
-                    ? "bg-neutral-800 text-white shadow-sm"
-                    : "text-neutral-400 hover:text-neutral-600"
-                }`}
-              >
-                {type.icon && (
-                  <type.icon
-                    weight={
-                      subsidy.conditionType === type.val ? "fill" : "light"
-                    }
-                    size={12}
-                  />
-                )}
-                {type.label}
-                {type.val !== "none" && "から"}
-              </button>
-            ))}
+        {/* プリセット選択 */}
+        <div className="bg-neutral-50 p-3 rounded-xl border border-border space-y-2">
+          <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
+            よくあるパターンから選ぶ
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {subsidyPresets.map((preset) => {
+              const isActive =
+                subsidy.conditionType === preset.type &&
+                subsidy.conditionValue === preset.value;
+
+              return (
+                <button
+                  key={`${preset.type}-${preset.value}`}
+                  onClick={() => {
+                    setSubsidy({
+                      ...subsidy,
+                      conditionType: preset.type as "none" | "distance" | "stops",
+                      conditionValue: preset.value,
+                      amount: preset.amount || subsidy.amount,
+                    });
+                  }}
+                  className={`relative p-2 rounded-lg border-2 transition-all text-left ${
+                    isActive
+                      ? "bg-primary border-primary text-white shadow-md"
+                      : "bg-white border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    {preset.type === "distance" && (
+                      <Buildings
+                        size={14}
+                        weight={isActive ? "fill" : "light"}
+                        className={isActive ? "text-white" : "text-primary"}
+                      />
+                    )}
+                    {preset.type === "stops" && (
+                      <Train
+                        size={14}
+                        weight={isActive ? "fill" : "light"}
+                        className={isActive ? "text-white" : "text-primary"}
+                      />
+                    )}
+                    <span className="text-xs font-bold">{preset.label}</span>
+                  </div>
+                  <div
+                    className={`text-[9px] ${
+                      isActive ? "text-white/80" : "text-neutral-500"
+                    }`}
+                  >
+                    {preset.desc}
+                  </div>
+                  {isActive && (
+                    <div className="absolute top-2 right-2 w-4 h-4 bg-white rounded-full flex items-center justify-center">
+                      <div className="w-2 h-2 bg-primary rounded-full" />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
+          {/* カスタム入力 */}
           {subsidy.conditionType !== "none" && (
-            <div className="flex items-center gap-2 justify-end">
-              <input
-                type="number"
-                className="bg-white border border-neutral-200 rounded text-center w-12 py-1 text-sm font-mono font-bold text-neutral-800 focus:outline-none focus:border-teal-500"
-                value={subsidy.conditionValue}
-                onChange={(e) =>
-                  setSubsidy({
-                    ...subsidy,
-                    conditionValue: Number(e.target.value),
-                  })
-                }
-              />
-              <span className="text-[10px] font-bold text-neutral-500">
-                {subsidy.conditionType === "distance" ? "km圏内" : "駅以内"}
-              </span>
+            <div className="pt-2 border-t border-border">
+              <div className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1.5">
+                カスタム設定
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 bg-white rounded-lg border-2 border-border p-2 focus-within:border-primary transition-colors">
+                    {subsidy.conditionType === "distance" && (
+                      <Buildings size={16} weight="bold" className="text-primary shrink-0" />
+                    )}
+                    {subsidy.conditionType === "stops" && (
+                      <Train size={16} weight="bold" className="text-primary shrink-0" />
+                    )}
+                    <input
+                      type="number"
+                      className="w-full bg-transparent text-center text-lg font-mono font-bold text-neutral-900 focus:outline-none"
+                      value={subsidy.conditionValue}
+                      min={1}
+                      max={subsidy.conditionType === "distance" ? 10 : 10}
+                      onChange={(e) =>
+                        setSubsidy({
+                          ...subsidy,
+                          conditionValue: Number(e.target.value),
+                        })
+                      }
+                    />
+                    <span className="text-sm font-bold text-neutral-600 shrink-0">
+                      {subsidy.conditionType === "distance" ? "km" : "駅"}
+                    </span>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="shrink-0">
+                  {subsidy.conditionType === "distance" ? "圏内" : "以内"}
+                </Badge>
+              </div>
             </div>
           )}
         </div>
 
-        {subsidy.conditionType !== "none" && (
-          <div className="bg-neutral-900 text-white p-4 rounded-md shadow-md flex justify-between items-center">
-            <span className="text-[10px] font-bold text-neutral-400">
-              自己負担額 (目安)
-            </span>
-            <span className="text-xl font-mono font-bold text-teal-400">
-              ¥
-              {Math.max(
-                0,
-                (filters.maxRent || 0) - subsidy.amount
-              ).toLocaleString()}
-            </span>
+        {/* 自己負担額表示 */}
+        {subsidy.conditionType !== "none" && subsidy.amount > 0 && (
+          <div className="bg-gradient-to-br from-primary to-teal-700 text-white p-3 rounded-xl shadow-md">
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-[10px] font-bold text-white/70 uppercase tracking-wider mb-1">
+                  自己負担額 (目安)
+                </div>
+                <div className="text-2xl font-mono font-black">
+                  ¥
+                  {Math.max(0, (filters.maxRent || 0) - subsidy.amount)
+                    .toFixed(1)
+                    .replace(/\.0$/, "")}
+                  万円
+                </div>
+              </div>
+              <div className="text-right text-xs text-white/80">
+                <div>家賃補助: {subsidy.amount}万円</div>
+                <div>
+                  条件:{" "}
+                  {subsidy.conditionType === "distance"
+                    ? `会社から${subsidy.conditionValue}km`
+                    : `最寄りから${subsidy.conditionValue}駅`}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

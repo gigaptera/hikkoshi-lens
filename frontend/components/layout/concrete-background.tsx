@@ -14,13 +14,18 @@ export const ConcreteBackground = ({
 }: ConcreteBackgroundProps) => {
   return (
     <div
-      className={`min-h-screen relative overflow-x-hidden bg-[#E0E0E0] text-neutral-800 font-sans selection:bg-[#FF5F00] selection:text-white ${className}`}
+      className={`
+        min-h-screen relative overflow-x-hidden
+        bg-background text-foreground font-sans
+        selection:bg-primary selection:text-primary-foreground
+        ${className}
+      `}
     >
       <NoiseFilter />
 
       {/* 1. Concrete Base Texture & Noise */}
       <div
-        className="fixed inset-0 z-0 pointer-events-none opacity-40 mix-blend-multiply"
+        className="fixed inset-0 z-0 pointer-events-none opacity-15 mix-blend-multiply dark:opacity-10"
         style={{ filter: "url(#noiseFilter)" }}
       ></div>
 
@@ -29,8 +34,8 @@ export const ConcreteBackground = ({
         className="fixed inset-0 z-0 pointer-events-none"
         style={{
           backgroundImage: `
-               linear-gradient(to right, rgba(0,0,0,0.08) 1px, transparent 1px),
-               linear-gradient(to bottom, rgba(0,0,0,0.08) 1px, transparent 1px)
+               linear-gradient(to right, rgba(0,0,0,0.045) 1px, transparent 1px),
+               linear-gradient(to bottom, rgba(0,0,0,0.045) 1px, transparent 1px)
              `,
           backgroundSize: "300px 600px", // Approx ration of 900x1800mm (Standard Tatami/Plywood size ratio)
         }}
@@ -47,12 +52,10 @@ export const ConcreteBackground = ({
       ></div>
 
       {/* 4. Lighting/Vignette */}
-      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-br from-white/20 via-transparent to-black/10"></div>
+      <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-br from-white/10 via-transparent to-black/10 dark:from-white/5 dark:to-black/30"></div>
 
       {/* Content Container */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto p-4 md:p-8 lg:p-12">
-        {children}
-      </div>
+      <div className="relative z-10 w-full">{children}</div>
     </div>
   );
 };
