@@ -66,7 +66,7 @@ export function StationList({
           return (
             <Panel
               key={station.id}
-              variant={isActive ? "steel" : "solid"} // Active gets steel, normal gets solid
+              variant={isActive ? "steel" : "solid"}
               className={cn(
                 "group cursor-pointer hover:border-teal-500 transition-colors duration-300",
                 isActive ? "border-teal-500 shadow-md" : ""
@@ -86,7 +86,7 @@ export function StationList({
 
                 {/* Main Info */}
                 <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+                  <div className="flex items-center gap-3 mb-2 flex-wrap">
                     <h3 className="text-2xl font-black text-neutral-900 tracking-tight group-hover:text-teal-600 transition-colors">
                       {station.name}
                     </h3>
@@ -96,6 +96,27 @@ export function StationList({
                     >
                       {station.line_name}
                     </Badge>
+
+                    {/* 家賃補助関連バッジ */}
+                    {station.is_nearby && (
+                      <Badge
+                        variant="outline"
+                        className="text-[9px] uppercase tracking-wider rounded-none border-teal-400 bg-teal-50 text-teal-700 font-bold px-2 py-0.5"
+                      >
+                        最寄り
+                      </Badge>
+                    )}
+
+                    {station.source_station &&
+                      station.stops_from_source !== undefined && (
+                        <Badge
+                          variant="outline"
+                          className="text-[9px] uppercase tracking-wider rounded-none border-blue-400 bg-blue-50 text-blue-700 font-bold px-2 py-0.5"
+                        >
+                          {station.source_station}から
+                          {station.stops_from_source}駅
+                        </Badge>
+                      )}
                   </div>
                   <div className="flex gap-4 text-xs font-mono text-neutral-500 items-baseline">
                     <span className="font-bold">{station.company}</span>
