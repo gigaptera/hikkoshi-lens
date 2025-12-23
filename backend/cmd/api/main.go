@@ -52,7 +52,8 @@ func main() {
 		svcScoring := service.NewScoringService()
 		ucStation := usecase.NewStationUsecase(repoStation, svcScoring)
 		hStation := handler.NewStationHandler(ucStation)
-		api.GET("/stations/nearby", hStation.GetNearby)
+		api.GET("/stations/search", hStation.Search)    // New search endpoint
+		api.GET("/stations/nearby", hStation.GetNearby) // Backward compatibility
 		api.GET("/stations/:id/three-stops", hStation.GetStationsWithinThreeStops)
 	}
 
