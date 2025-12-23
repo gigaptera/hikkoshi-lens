@@ -1,0 +1,35 @@
+[
+  {
+    "id": 1,
+    "station_code": "001001",
+    "organization_code": "JR-East",
+    "line_name": "山手線",
+    "name": "東京",
+    "prefecture_code": 13,
+    "location": "POINT(139.767125 35.681236)",
+    "address": "東京都千代田区丸の内一丁目",
+    "distance": 500
+  },
+  {
+    "id": 2,
+    "station_code": "002002",
+    "organization_code": "TokyoMetro",
+    "line_name": "丸ノ内線",
+    "name": "大手町",
+    "prefecture_code": 13,
+    "location": "POINT(139.762886 35.684523)",
+    "address": "東京都千代田区大手町",
+    "distance": 800
+  },
+  {
+    "id": 3,
+    "station_code": "003003",
+    "organization_code": "JR-East",
+    "line_name": "中央線",
+    "name": "神田",
+    "prefecture_code": 13,
+    "location": "POINT(139.770641 35.69169)",
+    "address": "東京都千代田区鍛冶町",
+    "distance": 1200
+  }
+]

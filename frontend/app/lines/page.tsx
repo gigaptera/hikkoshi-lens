@@ -2,59 +2,89 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
 import { useLocationStore } from "@/features/map/stores/location-store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Train, ArrowRight } from "@phosphor-icons/react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Train, ArrowRight, Funnel } from "@phosphor-icons/react";
 import { fetchNearbyStations, groupStationsByLine } from "@/features/lines/api";
 import { Line } from "@/features/lines/types/station";
-import { useLineStore } from "@/features/lines/stores/line-store";
 import { usePreferenceStore } from "@/features/lines/stores/preference-store";
+import { StationList } from "@/features/lines/components/station-list"; // We will reuse or update sidebar
+import { ConcreteFilters } from "@/components/features/lines/concrete-filters";
 import Link from "next/link";
 
-// 画面のみ（データはモック）。
-// work=lat,lng を受け取り、勤務先に近い順で路線（最大10件）を表示。
-
 export default function Lines() {
-  const router = useRouter();
   const workLocation = useLocationStore((state) => state.workLocation);
-  const weights = usePreferenceStore((state) => state.weights);
+  const { subsidy, weights, filters } = usePreferenceStore();
 
-  const [lines, setLines] = useState<Line[]>([]);
+  const [stations, setStations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // TEMPORARY: Allow viewing page without location for Design Review
+    /*
     if (!workLocation) {
       router.push("/");
       return;
     }
+    */
 
     const loadNearbyStations = async () => {
+      setLoading(true);
       try {
-        const stations = await fetchNearbyStations(
-          workLocation.lat,
-          workLocation.lng,
-          3000,
-          weights
-        );
-        const groupedLines = groupStationsByLine(stations);
-        setLines(groupedLines);
+        // TEMPORARY: Use fallback location if no workLocation
+        const lat = workLocation?.lat ?? 35.6812; // Tokyo Station
+        const lng = workLocation?.lng ?? 139.7671;
+
+        let fetchedStations: any[] = [];
+
+        if (subsidy.conditionType === "stops") {
+          // "Stops" mode: Find stations within 3 stops of the NEAREST station to work
+          // 1. Find nearest station first (small radius search)
+          const nearestCandidates = await fetchNearbyStations(
+            lat,
+            lng,
+            { ...filters, radius: 2000 }, // Look for nearest within 2km
+            weights
+          );
+
+          if (nearestCandidates.length > 0) {
+            // Sort by distance just in case
+            const nearest = nearestCandidates.sort(
+              (a, b) => (a.distance_km ?? 999) - (b.distance_km ?? 999)
+            )[0];
+
+            // 2. Fetch 3 stops from this station
+            // Note: Currently backend only supports 3 stops logic via specific endpoint
+            if (nearest && nearest.id) {
+              // Use the imported fetchStationsWithinThreeStops
+              const { fetchStationsWithinThreeStops } = await import(
+                "@/features/lines/api"
+              );
+              fetchedStations = await fetchStationsWithinThreeStops(
+                Number(nearest.id),
+                weights
+              );
+            }
+          }
+        } else {
+          // "Distance" mode: Use subsidy distance as radius
+          // If subsidy.conditionValue is set, use it (km -> meters). Otherwise fallback to filter radius.
+          const searchRadius = subsidy.conditionValue
+            ? subsidy.conditionValue * 1000
+            : filters.radius || 3000;
+
+          fetchedStations = await fetchNearbyStations(
+            lat,
+            lng,
+            { ...filters, radius: searchRadius },
+            weights
+          );
+        }
+
+        setStations(fetchedStations);
         setError(null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "駅情報の取得に失敗しました");
@@ -64,113 +94,56 @@ export default function Lines() {
     };
 
     loadNearbyStations();
-  }, [workLocation, weights]);
+  }, [workLocation, weights, filters, subsidy]);
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-4 grid gap-4 min-h-[calc(100vh-4rem)] mt-16">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link href="/">Home</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>Lines</BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="flex items-start justify-between gap-4 flex-wrap">
+    <main className="min-h-screen bg-neutral-200 text-neutral-900 font-sans p-8 md:p-13">
+      {/* Header Panel */}
+      <div className="max-w-7xl mx-auto mb-8 flex flex-col md:flex-row justify-between items-end gap-4">
         <div>
-          <h1 className="text-xl font-semibold">対象路線 (おすすめ順)</h1>
-          <p className="text-sm text-muted-foreground">
-            あなたの重視するポイント（重み）に基づいてスコア計算し、おすすめ順に表示します。
+          <div className="flex items-center gap-2 text-xs text-neutral-500 font-mono uppercase tracking-widest mb-2">
+            <Link href="/" className="hover:text-black transition-colors">
+              Home
+            </Link>
+            <span>/</span>
+            <span>Selection</span>
+          </div>
+          <h1 className="text-3xl font-light tracking-tight text-neutral-800">
+            最適エリア候補
+          </h1>
+          <p className="text-neutral-500 mt-1">
+            勤務地:{" "}
+            <span className="font-medium text-neutral-800 border-b border-neutral-400">
+              {workLocation?.address}
+            </span>
           </p>
         </div>
       </div>
 
-      {loading ? (
-        <div className="text-center py-8">Loading...</div>
-      ) : error ? (
-        <div className="text-center py-8 text-red-500">{error}</div>
-      ) : lines.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          周辺に路線が見つかりませんでした
-        </div>
-      ) : (
-        <Card className="rounded-none shadow-sm flex flex-col max-h-[calc(100vh-16rem)]">
-          <CardHeader className="pb-2 flex-shrink-0">
-            <CardTitle className="text-base">路線候補</CardTitle>
-            <CardDescription>
-              勤務先:{" "}
-              <span className="text-xs bg-muted px-2 py-0.5 rounded-none">
-                {workLocation?.address || "(未設定)"}
-              </span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-auto">
-            <ul className="divide-y">
-              {lines.map((line, i) => (
-                <li key={line.id} className="py-3 flex items-center gap-4">
-                  <div className="w-8 text-sm text-muted-foreground tabular-nums font-bold">
-                    #{i + 1}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Train className="h-5 w-5" />
-                        <span className="font-medium text-lg">
-                          {line.stations[0].name}
-                        </span>
-                      </div>
-                      <div className="flex flex-col text-sm text-muted-foreground">
-                        <span>{line.line_name}</span>
-                        <span className="text-xs">{line.company}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    {/* Score Badge */}
-                    {line.stations[0].total_score !== undefined && (
-                      <div className="flex flex-col items-end mr-2">
-                        <span className="text-[10px] text-muted-foreground">
-                          Score
-                        </span>
-                        <span className="font-bold tabular-nums text-lg text-primary-600">
-                          {line.stations[0].total_score.toFixed(0)}
-                        </span>
-                      </div>
-                    )}
-                    <Badge
-                      variant="outline"
-                      className="tabular-nums text-base px-3 py-1 rounded-none"
-                    >
-                      {(line.stations[0]?.distance_km ?? 0).toFixed(1)} km
-                    </Badge>
-                    <Button
-                      className="rounded-none bg-neutral-900 text-white hover:bg-neutral-800"
-                      onClick={() => {
-                        // 路線詳細ページに遷移
-                        // 詳細ページに遷移（起点となる最寄り駅のIDを渡す）
-                        const nearestStation = line.stations[0];
-                        if (nearestStation) {
-                          router.push(
-                            `/lines/line/?stationId=${nearestStation.id}`
-                          );
-                        }
-                      }}
-                    >
-                      この路線を見る <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Sidebar: Filter Panel */}
+        <aside className="lg:col-span-3 sticky top-8">
+          <ConcreteFilters />
+        </aside>
+
+        {/* Main Content: Station List */}
+        <section className="lg:col-span-9 space-y-4">
+          {loading ? (
+            <div className="p-8 text-center text-neutral-500">
+              リストを作成中...
+            </div>
+          ) : (
+            <StationList
+              stations={stations}
+              loading={loading}
+              activeStationId={null}
+              onStationClick={(s) =>
+                router.push(`/lines/line?stationId=${s.id}`)
+              }
+            />
+          )}
+        </section>
+      </div>
     </main>
   );
 }

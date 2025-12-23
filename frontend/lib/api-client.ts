@@ -68,6 +68,7 @@ async function fetchApi<T>(
 
   try {
     const response = await fetch(url, {
+      method: "GET", // Default to GET method
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -103,7 +104,14 @@ export interface NearbyStationsParams {
   lat: number;
   lon: number;
   radius?: number; // meters
+  minRent?: number;
+  maxRent?: number;
+  buildingType?: string;
+  layout?: string;
   weights?: Record<string, number>;
+  calculateScores?: boolean; // If false, return raw data only
+  subsidyType?: string; // "none" | "from_workplace"
+  subsidyRange?: number; // default: 3
 }
 
 // 路線関連のAPI
@@ -132,18 +140,45 @@ const buildWeightParams = (weights?: Record<string, number>) => {
 export const api = {
   // 駅関連
   stations: {
-    // 近くの駅を取得
-    nearby: async ({
+    // 駅検索（新エンドポイント）
+    search: async ({
       lat,
       lon,
-      radius = 3000,
+      radius = 500,
+      minRent,
+      maxRent,
+      buildingType,
+      layout,
       weights,
-    }: NearbyStationsParams) =>
-      fetchApi<ApiStation[]>(
-        `api/stations/nearby?lat=${lat}&lon=${lon}&radius=${radius}${buildWeightParams(
-          weights
-        )}`
-      ),
+      calculateScores,
+      subsidyType = "none",
+      subsidyRange = 3,
+    }: NearbyStationsParams) => {
+      const params = new URLSearchParams({
+        lat: lat.toString(),
+        lon: lon.toString(),
+        radius: radius.toString(),
+      });
+      if (minRent) params.append("min_rent", minRent.toString());
+      if (maxRent) params.append("max_rent", maxRent.toString());
+      if (buildingType) params.append("building_type", buildingType);
+      if (layout) params.append("layout", layout);
+      if (calculateScores !== undefined) {
+        params.append("calculate_scores", calculateScores.toString());
+      }
+      if (subsidyType) params.append("subsidy_type", subsidyType);
+      if (subsidyRange) params.append("subsidy_range", subsidyRange.toString());
+
+      const weightParams = buildWeightParams(weights);
+      const queryString = params.toString() + weightParams;
+
+      return fetchApi<ApiStation[]>(`api/stations/search?${queryString}`);
+    },
+
+    // 近くの駅を取得（互換性のため残す）
+    nearby: async (params: NearbyStationsParams) => {
+      return api.stations.search(params); // searchに委譲
+    },
 
     // 3駅検索
     threeStops: async ({ stationId, weights }: ThreeStopsParams) =>

@@ -33,18 +33,16 @@ type Station struct {
 type MarketPrice struct {
 	bun.BaseModel `bun:"table:market_prices,alias:mp"`
 	ID            int64   `bun:"id,pk,autoincrement"`
-	StationID     int64   `bun:"station_id,unique"`
-	AvgRent1R     float64 `bun:"avg_rent_1r"`
-	AvgRent1LDK   float64 `bun:"avg_rent_1ldk"` // JSONには1つの値しかないので、一旦ここには入れないか、同じ値を入れるか検討。現状は1Rとして扱う。
+	StationID     int64   `bun:"station_id"`
+	BuildingType  string  `bun:"building_type"`
+	Layout        string  `bun:"layout"`
+	AvgRent       float64 `bun:"avg_rent"`
 	Source        string  `bun:"source"`
 }
 
 func main() {
-	// Load .env from backend root or project root.
-	// Assuming running from project root, load backend/.env or just environment variables.
-	// Try loading backend/.env
+	// Load .env
 	if err := godotenv.Load("backend/.env"); err != nil {
-		// If failed, try loading from current dir or just rely on env
 		if err := godotenv.Load(".env"); err != nil {
 			log.Println("No .env file found")
 		}
@@ -52,7 +50,6 @@ func main() {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		// Fallback or constructing from parts
 		dsn = "postgres://postgres:postgres@localhost:54322/postgres?sslmode=disable"
 	}
 
@@ -62,7 +59,7 @@ func main() {
 
 	ctx := context.Background()
 
-	// 1. Load JSON file
+	// 1. Load JSON file (元データ - 1R/1Kの家賃相場)
 	jsonPath := "../data/processed/rent_market_price_integrated.json"
 	file, err := os.Open(jsonPath)
 	if err != nil {
@@ -76,7 +73,7 @@ func main() {
 	}
 	fmt.Printf("Loaded %d rent data entries\n", len(rentList))
 
-	// 2. Load Stations to created Code -> ID map
+	// 2. Load Stations
 	var stations []Station
 	if err := db.NewSelect().Model(&stations).Scan(ctx); err != nil {
 		log.Fatalf("Failed to fetch stations: %v", err)
@@ -88,57 +85,90 @@ func main() {
 	}
 	fmt.Printf("Loaded %d stations from DB\n", len(stations))
 
-	// 3. Prepare MarketPrice objects
-	var marketPrices []MarketPrice
-
-	// 重複除外用
-	seen := make(map[int64]bool)
-
+	// 3. 元データから駅ごとの基準家賃を取得
+	baseRentMap := make(map[int64]float64) // station_id -> 基準家賃(1R/1K)
 	for _, d := range rentList {
-		// stationcode in JSON might need padding if it was stripped, but file view showed "000223" so likely zero-padded.
-		// StationCode in DB should also match.
-
 		sid, ok := stationMap[d.StationCode]
 		if !ok {
-			// log.Printf("Station code not found in DB: %s (%s)", d.StationCode, d.Station)
 			continue
 		}
-
-		if seen[sid] {
-			continue
+		// 重複がある場合は最初の値を使用
+		if _, exists := baseRentMap[sid]; !exists {
+			baseRentMap[sid] = d.Rent
 		}
-		seen[sid] = true
-
-		mp := MarketPrice{
-			StationID: sid,
-			AvgRent1R: d.Rent, // Assuming the 'rent' in JSON is for 1R/1K
-			// AvgRent1LDK: 0, // No data
-			Source: "SUUMO_JSON_2024",
-		}
-		marketPrices = append(marketPrices, mp)
 	}
 
-	if len(marketPrices) == 0 {
+	if len(baseRentMap) == 0 {
 		log.Println("No matched stations found. Check station codes.")
 		return
 	}
 
-	// 4. Bulk Insert
-	// Debug: print first entry
-	if len(marketPrices) > 0 {
-		fmt.Printf("Sample entry: %+v\n", marketPrices[0])
+	fmt.Printf("Found base rent data for %d stations\n", len(baseRentMap))
+
+	// 4. 15通りの組み合わせを生成
+	buildingTypes := []string{"mansion", "apart", "detached"}
+	layouts := []string{"1r_1k_1dk", "1ldk_2k_2dk", "2ldk_3k_3dk", "3ldk_4k", "4ldk"}
+
+	// 調整係数 (建物種別)
+	buildingMultiplier := map[string]float64{
+		"mansion":  1.2, // マンションは1.2倍
+		"apart":    1.0, // アパートは基準
+		"detached": 0.8, // 戸建ては0.8倍（データが少ない想定）
 	}
 
-	// On Conflict Update
-	_, err = db.NewInsert().
-		Model(&marketPrices).
-		Column("station_id", "avg_rent_1r", "source").
-		On("CONFLICT (station_id) DO UPDATE").
-		Set("avg_rent_1r = EXCLUDED.avg_rent_1r").
-		Set("source = EXCLUDED.source").
-		Exec(ctx)
-	if err != nil {
-		log.Fatalf("Failed to insert market prices: %v", err)
+	// 調整係数 (間取り)
+	layoutMultiplier := map[string]float64{
+		"1r_1k_1dk":   1.0, // 基準（元データ）
+		"1ldk_2k_2dk": 1.3, // 1.3倍
+		"2ldk_3k_3dk": 1.6, // 1.6倍
+		"3ldk_4k":     2.0, // 2.0倍
+		"4ldk":        2.5, // 2.5倍
+	}
+
+	var marketPrices []MarketPrice
+
+	for stationID, baseRent := range baseRentMap {
+		for _, buildingType := range buildingTypes {
+			for _, layout := range layouts {
+				// 家賃を計算
+				adjustedRent := baseRent * buildingMultiplier[buildingType] * layoutMultiplier[layout]
+
+				mp := MarketPrice{
+					StationID:    stationID,
+					BuildingType: buildingType,
+					Layout:       layout,
+					AvgRent:      adjustedRent,
+					Source:       "SUUMO_ESTIMATED_2024",
+				}
+				marketPrices = append(marketPrices, mp)
+			}
+		}
+	}
+
+	fmt.Printf("Generated %d market price entries (15 combinations per station)\n", len(marketPrices))
+
+	// 5. Bulk Insert (バッチ処理)
+	batchSize := 1000
+	for i := 0; i < len(marketPrices); i += batchSize {
+		end := i + batchSize
+		if end > len(marketPrices) {
+			end = len(marketPrices)
+		}
+
+		batch := marketPrices[i:end]
+
+		_, err = db.NewInsert().
+			Model(&batch).
+			On("CONFLICT (station_id, building_type, layout) DO UPDATE").
+			Set("avg_rent = EXCLUDED.avg_rent").
+			Set("source = EXCLUDED.source").
+			Exec(ctx)
+
+		if err != nil {
+			log.Fatalf("Failed to insert market prices (batch %d-%d): %v", i, end, err)
+		}
+
+		fmt.Printf("Inserted batch %d-%d\n", i, end)
 	}
 
 	fmt.Printf("Successfully inserted/updated %d market prices\n", len(marketPrices))

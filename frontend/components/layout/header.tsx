@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ROUTES } from "@/constants";
+import { ROUTES } from "@/lib/constants";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { HeaderRow } from "@/components/layout/header-row";
 import { MapPin } from "@phosphor-icons/react";

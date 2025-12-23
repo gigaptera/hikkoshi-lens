@@ -1,6 +1,6 @@
 "use client";
 
-import { useUiStore } from "@/stores/ui-store";
+import { useUiStore } from "@/features/ui/stores/ui-store";
 
 export function Footer() {
   const toggle = useUiStore((s) => s.toggleFooter);

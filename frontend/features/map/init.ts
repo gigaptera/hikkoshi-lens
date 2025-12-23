@@ -14,6 +14,10 @@ export function createMapWithLanguage(
   container: HTMLDivElement,
   initialStyle: string
 ): mapboxgl.Map {
+  if (!mapboxgl.accessToken) {
+    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
+  }
+
   const map = new mapboxgl.Map({
     container,
     style: initialStyle,

@@ -18,20 +18,38 @@ const (
 )
 
 func (s *RentScoreStrategy) Calculate(station *domain.Station) float64 {
-	if station.MarketPrice == nil || station.MarketPrice.AvgRent == 0 {
-		return RentMinScore
+	if len(station.MarketPrices) == 0 {
+		return 50.0 // data missing, return neutral score
 	}
 
-	rent := station.MarketPrice.AvgRent
-
-	// 3万円基準、3万円あがるごとに1点減る
-	score := 5.0 - (rent-3.0)/3.0
-
-	if score > RentMaxScore {
-		return RentMaxScore
+	totalRent := 0.0
+	count := 0
+	for _, mp := range station.MarketPrices {
+		if mp.Rent > 0 {
+			totalRent += mp.Rent
+			count++
+		}
 	}
-	if score < RentMinScore {
-		return RentMinScore
+
+	if count == 0 {
+		return 50.0
+	}
+
+	avgRent := totalRent / float64(count)
+
+	// Scoring Logic:
+	// <= 6.0 (6万円) -> 100点
+	// >= 16.0 (16万円) -> 0点
+	// Linear interpolation
+	// Score = 100 - (AvgRent - 6.0) * 10
+
+	score := 100.0 - (avgRent-6.0)*10.0
+
+	if score > 100 {
+		return 100
+	}
+	if score < 0 {
+		return 0
 	}
 	return score
 }

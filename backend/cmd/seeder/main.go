@@ -69,6 +69,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Create Unique Index for Upsert
+	if _, err := db.ExecContext(ctx, "CREATE UNIQUE INDEX IF NOT EXISTS uq_station_building_layout ON market_prices (station_id, building_type, layout)"); err != nil {
+		log.Printf("Warning: failed to create unique index: %v", err)
+	}
+
 	// 1. Stationデータの読み込み (stationcode.json)
 	stationJsonPath := filepath.Join("..", "data", "processed", "stationcode.json")
 	bytes, err := os.ReadFile(stationJsonPath)
@@ -132,57 +137,59 @@ func main() {
 		}
 	}
 
-	// 2. MarketPriceデータの読み込み
-	priceJsonPath := filepath.Join("..", "data", "processed", "rent_market_price_integrated.json")
-	priceBytes, err := os.ReadFile(priceJsonPath)
-	if err != nil {
-		log.Printf("Warning: Failed to read market price json: %v", err)
-	} else {
-		var priceData []MarketPriceJSON
-		if err := json.Unmarshal(priceBytes, &priceData); err != nil {
-			log.Fatalf("Failed to parse market price json: %v", err)
-		}
-
-		log.Printf("Found %d market prices", len(priceData))
-
-		// Deduplicate Prices
-		uniquePricesMap := make(map[string]domain.MarketPrice)
-		for _, p := range priceData {
-			// StationCodeを文字列に変換
-			scStr := fmt.Sprintf("%v", p.StationCode)
-
-			mp := domain.MarketPrice{
-				StationCode: scStr,
-				AvgRent:     p.Rent,
+	// 2. MarketPriceデータの読み込み (一時的に無効化 - 新しいスクレイピングデータ待ち)
+	/*
+		priceJsonPath := filepath.Join("..", "data", "processed", "rent_market_price_integrated.json")
+		priceBytes, err := os.ReadFile(priceJsonPath)
+		if err != nil {
+			log.Printf("Warning: Failed to read market price json: %v", err)
+		} else {
+			var priceData []MarketPriceJSON
+			if err := json.Unmarshal(priceBytes, &priceData); err != nil {
+				log.Fatalf("Failed to parse market price json: %v", err)
 			}
-			uniquePricesMap[scStr] = mp
-		}
 
-		var prices []domain.MarketPrice
-		for _, v := range uniquePricesMap {
-			prices = append(prices, v)
-		}
-		log.Printf("Unique Prices: %d", len(prices))
+			log.Printf("Found %d market prices", len(priceData))
 
-		// Bulk Insert MarketPrices
-		for i := 0; i < len(prices); i += batchSize {
-			end := i + batchSize
-			if end > len(prices) {
-				end = len(prices)
+			// Deduplicate Prices
+			uniquePricesMap := make(map[string]domain.MarketPrice)
+			for _, p := range priceData {
+				// StationCodeを文字列に変換
+				scStr := fmt.Sprintf("%v", p.StationCode)
+
+				mp := domain.MarketPrice{
+					// StationCode: scStr, // OLD Struct
+					// AvgRent:     p.Rent, // OLD Struct
+				}
+				uniquePricesMap[scStr] = mp
 			}
-			sub := prices[i:end]
-			_, err := db.NewInsert().Model(&sub).
-				On("CONFLICT (station_code) DO UPDATE").
-				Set("avg_rent = EXCLUDED.avg_rent").
-				Set("updated_at = current_timestamp").
-				Exec(ctx)
-			if err != nil {
-				log.Printf("Failed to insert prices batch %d-%d: %v", i, end, err)
-			} else {
-				log.Printf("Inserted/Updated prices batch %d-%d", i, end)
+
+			var prices []domain.MarketPrice
+			for _, v := range uniquePricesMap {
+				prices = append(prices, v)
+			}
+			log.Printf("Unique Prices: %d", len(prices))
+
+			// Bulk Insert MarketPrices
+			for i := 0; i < len(prices); i += batchSize {
+				end := i + batchSize
+				if end > len(prices) {
+					end = len(prices)
+				}
+				sub := prices[i:end]
+				_, err := db.NewInsert().Model(&sub).
+					On("CONFLICT (station_code) DO UPDATE"). // OLD Constraint
+					Set("avg_rent = EXCLUDED.avg_rent").
+					Set("updated_at = current_timestamp").
+					Exec(ctx)
+				if err != nil {
+					log.Printf("Failed to insert prices batch %d-%d: %v", i, end, err)
+				} else {
+					log.Printf("Inserted/Updated prices batch %d-%d", i, end)
+				}
 			}
 		}
-	}
+	*/
 
 	log.Println("Seeding completed!")
 }

@@ -1,26 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Noto_Sans_JP } from "next/font/google";
 import "./globals.css";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { ThemeProvider } from "@/components/layout/theme-provider";
+import { ConcreteBackground } from "@/components/layout/concrete-background";
 import { IconProvider } from "@/components/providers/icon-provider";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({ subsets: ["latin"] });
+const notoSansJP = Noto_Sans_JP({
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
 });
 
 export const metadata: Metadata = {
-  title: "HikkoshiLens - データドリブンな住まい探し",
-  description:
-    "6つのパラメータで最適な駅を見つける、データ分析型引越し支援ツール",
+  title: "Hikkoshi Lens",
+  description: "Data-driven relocation intelligence.",
 };
 
 export default function RootLayout({
@@ -29,22 +22,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ja" suppressHydrationWarning>
+    <html lang="ja">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-full overflow-hidden`}
+        className={`${inter.className} ${notoSansJP.className} antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <IconProvider>
-            <Header />
-            {children}
-            <Footer />
-          </IconProvider>
-        </ThemeProvider>
+        <IconProvider>
+          <ConcreteBackground>{children}</ConcreteBackground>
+        </IconProvider>
       </body>
     </html>
   );

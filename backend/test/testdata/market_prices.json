@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "station_id": 1,
+    "building_type": "mansion",
+    "layout": "1r_1k_1dk",
+    "rent": 8.0,
+    "source": "TEST_DATA"
+  },
+  {
+    "id": 2,
+    "station_id": 1,
+    "building_type": "mansion",
+    "layout": "1ldk_2k_2dk",
+    "rent": 10.5,
+    "source": "TEST_DATA"
+  },
+  {
+    "id": 3,
+    "station_id": 1,
+    "building_type": "apart",
+    "layout": "1r_1k_1dk",
+    "rent": 6.5,
+    "source": "TEST_DATA"
+  },
+  {
+    "id": 4,
+    "station_id": 2,
+    "building_type": "mansion",
+    "layout": "1r_1k_1dk",
+    "rent": 9.0,
+    "source": "TEST_DATA"
+  },
+  {
+    "id": 5,
+    "station_id": 2,
+    "building_type": "apart",
+    "layout": "1ldk_2k_2dk",
+    "rent": 7.5,
+    "source": "TEST_DATA"
+  },
+  {
+    "id": 6,
+    "station_id": 3,
+    "building_type": "mansion",
+    "layout": "2ldk_3k_3dk",
+    "rent": 12.0,
+    "source": "TEST_DATA"
+  }
+]
