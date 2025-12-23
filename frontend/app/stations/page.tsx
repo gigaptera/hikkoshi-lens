@@ -27,51 +27,28 @@ export default function Stations() {
         const lat = workLocation?.lat ?? 35.6812; // Tokyo Station
         const lng = workLocation?.lng ?? 139.7671;
 
-        let fetchedStations: any[] = [];
+        // 家賃補助の種類を判定
+        const subsidyType =
+          subsidy.conditionType === "stops" ? "from_workplace" : "none";
 
-        if (subsidy.conditionType === "stops") {
-          // "Stops" mode: Find stations within 3 stops of the NEAREST station to work
-          // 1. Find nearest station first (small radius search)
-          const nearestCandidates = await fetchNearbyStations(
-            lat,
-            lng,
-            { ...filters, radius: 2000 }, // Look for nearest within 2km
-            weights
-          );
+        const subsidyRange =
+          subsidy.conditionType === "stops" ? subsidy.conditionValue || 3 : 3;
 
-          if (nearestCandidates.length > 0) {
-            // Sort by distance just in case
-            const nearest = nearestCandidates.sort(
-              (a, b) => (a.distance_km ?? 999) - (b.distance_km ?? 999)
-            )[0];
-
-            // 2. Fetch 3 stops from this station
-            // Note: Currently backend only supports 3 stops logic via specific endpoint
-            if (nearest && nearest.id) {
-              // Use the imported fetchStationsWithinThreeStops
-              const { fetchStationsWithinThreeStops } = await import(
-                "@/features/lines/api"
-              );
-              fetchedStations = await fetchStationsWithinThreeStops(
-                Number(nearest.id),
-                weights
-              );
-            }
-          }
-        } else {
-          // "Distance" mode: Use subsidy distance as radius
-          // If subsidy.conditionValue is set, use it (km -> meters). Otherwise fallback to filter radius.
-          const searchRadius = subsidy.conditionValue
+        // 検索半径
+        const searchRadius =
+          subsidy.conditionType === "distance"
             ? subsidy.conditionValue * 1000
-            : filters.radius || 3000;
+            : filters.radius || 500;
 
-          fetchedStations = await fetchNearbyStations(
-            lat,
-            lng,
-            { ...filters, radius: searchRadius },
-            weights
-          );
-        }
+        // 新しいsearch APIで一度に取得
+        const fetchedStations = await fetchNearbyStations(
+          lat,
+          lng,
+          { ...filters, radius: searchRadius },
+          weights,
+          subsidyType,
+          subsidyRange
+        );
 
         setStations(fetchedStations);
         setError(null);
