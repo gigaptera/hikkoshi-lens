@@ -52,19 +52,23 @@ export async function fetchNearbyStations(
   lat: number,
   lon: number,
   filters: StationFilters,
-  weights?: Record<string, number>
+  weights?: Record<string, number>,
+  subsidyType?: string,
+  subsidyRange?: number
 ): Promise<Station[]> {
   try {
-    // 生データを取得（バックエンドでスコア計算しない）
-    const apiStations = await api.stations.nearby({
+    // searchエンドポイントを使用
+    const apiStations = await api.stations.search({
       lat,
       lon,
-      radius: filters.radius || 3000,
+      radius: filters.radius || 500,
       minRent: filters.minRent,
       maxRent: filters.maxRent,
       buildingType: filters.buildingType,
       layout: filters.layout,
       calculateScores: false, // フロントエンドで計算するため false
+      subsidyType: subsidyType || "none",
+      subsidyRange: subsidyRange || 3,
     });
 
     // Add null check for API response
