@@ -9,8 +9,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "bg-card text-card-foreground shadow-sm", // Panel on Wall
-      // No border by default for Panels, but option to add structural border via className
+      "rounded-none border bg-card text-card-foreground shadow-sm transition-shadow hover:shadow-md",
       className
     )}
     {...props}
@@ -37,7 +36,7 @@ const CardTitle = React.forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "font-display font-semibold leading-none tracking-tight",
       className
     )}
     {...props}
@@ -51,7 +50,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-neutral-500", className)}
+    className={cn("text-sm text-muted-foreground font-sans", className)}
     {...props}
   />
 ));

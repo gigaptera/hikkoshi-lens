@@ -1,16 +1,33 @@
 import type { Metadata } from "next";
-import { Inter, Noto_Sans_JP } from "next/font/google";
+import {
+  Inter,
+  Noto_Sans_JP,
+  Playfair_Display,
+  JetBrains_Mono,
+} from "next/font/google"; // Turbo
 import "./globals.css";
-import "mapbox-gl/dist/mapbox-gl.css";
-import { ConcreteBackground } from "@/components/layout/concrete-background";
-import { IconProvider } from "@/components/providers/icon-provider";
-import { AppShell } from "@/components/layout/app-shell";
-import { ThemeProvider } from "@/components/layout/theme-provider";
+import { ThemeProvider } from "@/components/theme-provider";
 
-const inter = Inter({ subsets: ["latin"] });
-const notoSansJP = Noto_Sans_JP({
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["100", "300", "400", "500", "700", "900"],
+});
+
+const notoSansJP = Noto_Sans_JP({
+  variable: "--font-noto-sans-jp",
+  subsets: ["latin"],
+  weight: ["400", "500", "700", "900"],
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
@@ -26,14 +43,15 @@ export default function RootLayout({
   return (
     <html lang="ja" suppressHydrationWarning>
       <body
-        className={`${inter.className} ${notoSansJP.className} antialiased`}
+        className={`${inter.variable} ${notoSansJP.variable} ${playfair.variable} ${jetbrainsMono.variable} antialiased font-sans`}
       >
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <ConcreteBackground>
-            <IconProvider>
-              <AppShell>{children}</AppShell>
-            </IconProvider>
-          </ConcreteBackground>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
         </ThemeProvider>
       </body>
     </html>

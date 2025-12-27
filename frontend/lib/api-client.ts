@@ -1,10 +1,6 @@
-import { ApiStation } from "@/features/lines/types/station";
-
-// APIの基本設定
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080";
 
-// 共通のエラーハンドリング
 class ApiError extends Error {
   constructor(
     public status: number,
@@ -16,7 +12,6 @@ class ApiError extends Error {
   }
 }
 
-// Mock Data for fallback
 const MOCK_STATIONS = [
   {
     id: 1,
@@ -53,22 +48,17 @@ const MOCK_STATIONS = [
   },
 ];
 
-// 基本的なフェッチ関数
 async function fetchApi<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  // Use mock if specifically requested or if environment dictates (optional)
-  // For now, try fetch, fallback to mock on connection error for dev convenience
-
-  // 相対パスの場合はNext.jsのAPIルートを使用し、絶対URLの場合はそのまま使用
   const url = endpoint.startsWith("/")
     ? endpoint
     : `${API_BASE_URL}/${endpoint}`;
 
   try {
     const response = await fetch(url, {
-      method: "GET", // Default to GET method
+      method: "GET",
       ...options,
       headers: {
         "Content-Type": "application/json",
@@ -83,138 +73,21 @@ async function fetchApi<T>(
 
     return response.json();
   } catch (error) {
-    // Connection refused or network error
-    console.warn(`API Error (${url}):`, error);
-    console.info("⚠️ Falling back to MOCK DATA due to API connection failure.");
+    if (process.env.NODE_ENV === "development") {
+      console.warn(`API Error (${url}):`, error);
+      console.info(
+        "⚠️ Falling back to MOCK DATA due to API connection failure."
+      );
 
-    // Simple mock routing
-    if (
-      endpoint.includes("stations/nearby") ||
-      endpoint.includes("three-stops")
-    ) {
-      return MOCK_STATIONS as unknown as T;
+      if (
+        endpoint.includes("stations/search") ||
+        endpoint.includes("stations/nearby")
+      ) {
+        return MOCK_STATIONS as unknown as T;
+      }
     }
-
     throw error;
   }
 }
 
-// 駅関連のAPI
-export interface NearbyStationsParams {
-  lat: number;
-  lon: number;
-  radius?: number; // meters
-  minRent?: number;
-  maxRent?: number;
-  buildingType?: string;
-  layout?: string;
-  weights?: Record<string, number>;
-  calculateScores?: boolean; // If false, return raw data only
-  subsidyType?: string; // "none" | "from_workplace"
-  subsidyRange?: number; // default: 3
-}
-
-// 路線関連のAPI
-export interface ThreeStopsParams {
-  stationId: number;
-  weights?: Record<string, number>;
-}
-
-export interface XYZParams {
-  x?: number;
-  y?: number;
-  z?: number;
-  lon?: number;
-  lat?: number;
-}
-
-// Helper params builder
-const buildWeightParams = (weights?: Record<string, number>) => {
-  if (!weights) return "";
-  return Object.entries(weights)
-    .map(([k, v]) => `&w_${k}=${v}`)
-    .join("");
-};
-
-// APIクライアント
-export const api = {
-  // 駅関連
-  stations: {
-    // 駅検索（新エンドポイント）
-    search: async ({
-      lat,
-      lon,
-      radius = 500,
-      minRent,
-      maxRent,
-      buildingType,
-      layout,
-      weights,
-      calculateScores,
-      subsidyType = "none",
-      subsidyRange = 3,
-    }: NearbyStationsParams) => {
-      const params = new URLSearchParams({
-        lat: lat.toString(),
-        lon: lon.toString(),
-        radius: radius.toString(),
-      });
-      if (minRent) params.append("min_rent", minRent.toString());
-      if (maxRent) params.append("max_rent", maxRent.toString());
-      if (buildingType) params.append("building_type", buildingType);
-      if (layout) params.append("layout", layout);
-      if (calculateScores !== undefined) {
-        params.append("calculate_scores", calculateScores.toString());
-      }
-      if (subsidyType) params.append("subsidy_type", subsidyType);
-      if (subsidyRange) params.append("subsidy_range", subsidyRange.toString());
-
-      const weightParams = buildWeightParams(weights);
-      const queryString = params.toString() + weightParams;
-
-      return fetchApi<ApiStation[]>(`api/stations/search?${queryString}`);
-    },
-
-    // 近くの駅を取得（互換性のため残す）
-    nearby: async (params: NearbyStationsParams) => {
-      return api.stations.search(params); // searchに委譲
-    },
-
-    // 3駅検索
-    threeStops: async ({ stationId, weights }: ThreeStopsParams) =>
-      fetchApi<ApiStation[]>(
-        `api/stations/${stationId}/three-stops?${
-          weights ? buildWeightParams(weights).replace(/^&/, "") : ""
-        }`
-      ),
-  },
-
-  // XYZ関連
-  xyz: {
-    // 経度緯度からXYZタイル座標に変換
-    lonLatToXyz: async ({ lon, lat, z }: XYZParams) =>
-      fetchApi<{ x: number; y: number; z: number }>(
-        `api/xyz/lon-lat-to-xyz?lon=${lon}&lat=${lat}&z=${z}`
-      ),
-
-    // タイル左上の経度緯度を取得
-    topLeft: async ({ x, y, z }: XYZParams) =>
-      fetchApi<{ lon: number; lat: number }>(
-        `api/xyz/top-left?x=${x}&y=${y}&z=${z}`
-      ),
-
-    // タイルのバウンディングボックスを取得
-    bbox: async ({ x, y, z }: XYZParams) =>
-      fetchApi<[number, number, number, number]>(
-        `api/xyz/bbox?x=${x}&y=${y}&z=${z}`
-      ),
-
-    // タイル中心の経度緯度を取得
-    tileCenter: async ({ x, y, z }: XYZParams) =>
-      fetchApi<{ lon: number; lat: number }>(
-        `api/xyz/tile-center?x=${x}&y=${y}&z=${z}`
-      ),
-  },
-};
-
-export default api;
+export { fetchApi, ApiError };
