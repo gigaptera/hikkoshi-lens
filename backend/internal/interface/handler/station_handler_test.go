@@ -33,6 +33,22 @@ func (m *MockStationUsecase) GetStationsWithinThreeStops(ctx context.Context, st
 	return args.Get(0).([]*domain.Station), args.Error(1)
 }
 
+func (m *MockStationUsecase) GetStationsByLine(ctx context.Context, organizationCode, lineName string) ([]*domain.Station, error) {
+	args := m.Called(ctx, organizationCode, lineName)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*domain.Station), args.Error(1)
+}
+
+func (m *MockStationUsecase) GetStationDetail(ctx context.Context, stationID int64) (*domain.StationDetail, error) {
+	args := m.Called(ctx, stationID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*domain.StationDetail), args.Error(1)
+}
+
 // TestGetNearby_Success はGetNearbyの正常系テスト
 func TestGetNearby_Success(t *testing.T) {
 	// Setup

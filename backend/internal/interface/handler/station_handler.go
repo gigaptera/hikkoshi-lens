@@ -140,3 +140,34 @@ func (h *StationHandler) GetStationsWithinThreeStops(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, stations)
 }
+
+func (h *StationHandler) GetStationsByLine(c echo.Context) error {
+	orgCode := c.QueryParam("organization_code")
+	lineName := c.QueryParam("line_name")
+
+	if orgCode == "" || lineName == "" {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "organization_code and line_name are required"})
+	}
+
+	stations, err := h.u.GetStationsByLine(c.Request().Context(), orgCode, lineName)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, stations)
+}
+
+func (h *StationHandler) GetStationDetail(c echo.Context) error {
+	idStr := c.Param("id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{"error": "Invalid station ID"})
+	}
+
+	detail, err := h.u.GetStationDetail(c.Request().Context(), id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"error": err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, detail)
+}

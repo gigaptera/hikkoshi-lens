@@ -7,6 +7,8 @@ import {
 } from "next/font/google"; // Turbo
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { GlobalHeader } from "@/components/layout/global-header";
+import { GlobalFooter } from "@/components/layout/global-footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -51,7 +53,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* <ModeToggle /> moved to GlobalHeader */}
+          <div className="flex flex-col min-h-screen">
+            <GlobalHeader />
+            <div className="flex-1 pb-20 lg:pb-0">{children}</div>
+            <GlobalFooter />
+          </div>
         </ThemeProvider>
       </body>
     </html>

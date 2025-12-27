@@ -28,6 +28,7 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
+import { searchAddress } from "@/lib/services/geocoding";
 
 export function SearchWidget() {
   const router = useRouter();
@@ -52,30 +53,58 @@ export function SearchWidget() {
     disaster: 50,
   });
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     if (!location.trim()) return;
     setIsLoading(true);
 
-    const params = new URLSearchParams();
-    params.set("q", location);
-    params.set("building_type", buildingType);
-    params.set("layout", layout);
-    if (maxRent) params.set("max_rent", maxRent);
+    try {
+      // Use the robust geocoding service (GSI -> Mapbox)
+      const data = await searchAddress(location);
+      let lat = "";
+      let lon = "";
 
-    // Pass allowance params if enabled
-    if (useAllowance) {
-      if (allowanceAmount) params.set("allowance_amount", allowanceAmount);
-      params.set("allowance_type", allowanceType);
-      params.set("allowance_value", allowanceValue || "3.0");
+      if (data.features && data.features.length > 0) {
+        const [lng, ltt] = data.features[0].center;
+        lat = ltt.toString();
+        lon = lng.toString();
+      }
+
+      const params = new URLSearchParams();
+      // If geocoding succeeded, use coordinates.
+      // If not (or no token), we still pass 'q' but SearchResultPage might default to Tokyo.
+      if (lat && lon) {
+        params.set("lat", lat);
+        params.set("lon", lon);
+      }
+      params.set("q", location);
+
+      params.set("building_type", buildingType);
+      params.set("layout", layout);
+      if (maxRent) params.set("max_rent", maxRent);
+
+      // Pass allowance params if enabled
+      if (useAllowance) {
+        if (allowanceAmount) params.set("allowance_amount", allowanceAmount);
+        params.set("allowance_type", allowanceType);
+        params.set("allowance_value", allowanceValue || "3.0");
+      }
+
+      params.set("w_rent", weights.rent.toString());
+      params.set("w_access", weights.access.toString());
+      params.set("w_safety", weights.safety.toString());
+      params.set("w_surroundings", weights.surroundings.toString());
+      params.set("w_disaster", weights.disaster.toString());
+
+      router.push(`/search/result?${params.toString()}`);
+    } catch (error) {
+      console.error("Search failed:", error);
+      // Fallback navigation even if geocoding fails
+      const params = new URLSearchParams();
+      params.set("q", location);
+      router.push(`/search/result?${params.toString()}`);
+    } finally {
+      setIsLoading(false);
     }
-
-    params.set("w_rent", weights.rent.toString());
-    params.set("w_access", weights.access.toString());
-    params.set("w_safety", weights.safety.toString());
-    params.set("w_surroundings", weights.surroundings.toString());
-    params.set("w_disaster", weights.disaster.toString());
-
-    router.push(`/search/result?${params.toString()}`);
   };
 
   const updateWeight = (key: keyof typeof weights, value: number[]) => {
@@ -83,7 +112,7 @@ export function SearchWidget() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto font-sans bg-background/95 backdrop-blur-sm border border-primary/10 shadow-2xl p-8 relative z-20 text-left">
+    <div className="w-full max-w-4xl font-sans bg-background/95 backdrop-blur-sm border border-primary/10 shadow-2xl p-8 relative z-20 text-left">
       <div className="space-y-8">
         {/* Section 1: Location & Basic Constraints */}
         <div className="space-y-6">
@@ -223,10 +252,10 @@ export function SearchWidget() {
                 <Label className="text-sm shrink-0 w-12">条件:</Label>
                 <Input
                   type="number"
-                  placeholder="例: 3.0"
+                  placeholder="3.0"
                   value={allowanceValue}
                   onChange={(e) => setAllowanceValue(e.target.value)}
-                  className="h-10 w-24 rounded-none font-mono text-lg bg-background border border-input focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
+                  className="h-10 w-28 rounded-none font-mono text-base bg-background border border-input focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
                 />{" "}
                 <span className="text-sm text-muted-foreground">
                   {allowanceType === "distance" ? "km 以内" : "駅 以内"}
@@ -237,10 +266,10 @@ export function SearchWidget() {
                 <Label className="text-sm shrink-0 w-12">金額:</Label>
                 <Input
                   type="number"
-                  placeholder="例: 3.0"
+                  placeholder="3.0"
                   value={allowanceAmount}
                   onChange={(e) => setAllowanceAmount(e.target.value)}
-                  className="h-10 w-24 rounded-none font-mono text-lg bg-background border border-input focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
+                  className="h-10 w-28 rounded-none font-mono text-base bg-background border border-input focus:ring-1 focus:ring-primary [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-center"
                 />{" "}
                 <span className="text-sm text-muted-foreground">万円 支給</span>
               </div>
@@ -260,7 +289,7 @@ export function SearchWidget() {
               </h3>
             </div>
 
-            <div className="grid grid-cols-2 gap-x-12 gap-y-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-8">
               {/* Price (formerly Rent) */}
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-sm">

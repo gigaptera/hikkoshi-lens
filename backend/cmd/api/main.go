@@ -54,7 +54,10 @@ func main() {
 		hStation := handler.NewStationHandler(ucStation)
 		api.GET("/stations/search", hStation.Search)    // New search endpoint
 		api.GET("/stations/nearby", hStation.GetNearby) // Backward compatibility
+		api.GET("/stations/line", hStation.GetStationsByLine)
 		api.GET("/stations/:id/three-stops", hStation.GetStationsWithinThreeStops)
+		api.GET("/stations/:id/details", hStation.GetStationDetail)
+
 	}
 
 	// Start server

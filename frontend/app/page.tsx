@@ -1,39 +1,18 @@
-import { Button } from "@/components/ui/button";
 import { SearchWidget } from "@/components/features/search/search-widget";
-import { ModeToggle } from "@/components/mode-toggle";
 
 export default function LandingPage() {
   return (
     <main className="min-h-screen flex flex-col bg-background selection:bg-black selection:text-white">
-      {/* Header */}
-      <header className="p-6 flex justify-between items-center max-w-7xl mx-auto w-full">
-        <div className="flex items-center gap-2">
-          <span className="h-6 w-6 bg-black dark:bg-white rounded-none"></span>
-          <span className="font-display font-medium text-xl tracking-tight">
-            Hikkoshi Lens
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <ModeToggle />
-          <Button
-            variant="outline"
-            className="rounded-none border-foreground hover:bg-foreground hover:text-background transition-colors"
-          >
-            LOGIN
-          </Button>
-        </div>
-      </header>
-
       {/* Hero Section */}
       {/* Hero Section */}
-      <section className="flex flex-col items-center pt-16 pb-12 w-full max-w-screen-xl mx-auto text-center space-y-8 px-6">
-        <div className="space-y-4">
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-foreground">
+      <section className="flex flex-col items-start pt-20 pb-16 w-full max-w-5xl mx-auto space-y-10 px-6 sm:px-8 lg:px-12">
+        <div className="space-y-5 text-left w-full">
+          <h1 className="font-display text-5xl md:text-6xl lg:text-7xl leading-[1.05] tracking-tight text-foreground">
             理想の街と
             <br />
-            <span className="">出会う</span>
+            <span className="text-foreground/80">出会う</span>
           </h1>
-          <p className="font-sans text-base md:text-lg text-muted-foreground tracking-wide">
+          <p className="font-sans text-base md:text-lg text-muted-foreground tracking-wide pl-1 border-l-2 border-primary/20">
             Data-driven relocation intelligence.
           </p>
         </div>

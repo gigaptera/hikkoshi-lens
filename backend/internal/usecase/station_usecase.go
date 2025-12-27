@@ -10,6 +10,8 @@ import (
 type StationUsecase interface {
 	GetNearbyStations(ctx context.Context, lat, lon float64, filter domain.StationFilter) ([]*domain.Station, error)
 	GetStationsWithinThreeStops(ctx context.Context, stationID int64, weights map[string]int) ([]*domain.Station, error)
+	GetStationsByLine(ctx context.Context, organizationCode, lineName string) ([]*domain.Station, error)
+	GetStationDetail(ctx context.Context, stationID int64) (*domain.StationDetail, error)
 }
 
 type stationUsecase struct {
@@ -247,4 +249,67 @@ func (u *stationUsecase) GetStationsWithinThreeStops(ctx context.Context, statio
 	// 将来的にはfilter全体を引数で受け取るように修正する必要がある。
 
 	return result, nil
+}
+
+func (u *stationUsecase) GetStationsByLine(ctx context.Context, organizationCode, lineName string) ([]*domain.Station, error) {
+	return u.repo.GetByLine(ctx, organizationCode, lineName)
+}
+
+func (u *stationUsecase) GetStationDetail(ctx context.Context, stationID int64) (*domain.StationDetail, error) {
+	// TODO: Replace with actual data fetching logic
+	station, err := u.repo.GetStation(ctx, stationID)
+	if err != nil {
+		return nil, err
+	}
+
+	detail := &domain.StationDetail{
+		ID:   station.ID,
+		Name: station.Name,
+		Location: domain.Location{
+			Lat: 26.1979, // Akamine mock coords
+			Lon: 127.6627,
+		},
+		Lines: []string{station.LineName}, // In reality, fetch all connecting lines
+		Tags:  []string{"コスパ良好", "学生街", "隠れた名店"},
+		AIInsight: domain.AIInsight{
+			Summary: domain.AISummary{
+				Pros: []string{"駅前に24時間スーパーがある", "都心まで急行で15分"},
+				Cons: []string{"駅周辺は坂が多い", "夜間は街灯が少なめ"},
+			},
+			ResidentVoices: domain.ResidentVoices{
+				Positive: []string{"パン屋の「こむぎ」がおいしい", "公園が多くて子供が遊びやすい"},
+				Negative: []string{"朝のラッシュ時は改札が入場制限かかることがある", "深夜のバイク音が気になる"},
+			},
+			Trend:       "駅北側の再開発が進んでおり、新しいカフェが増えている",
+			LastUpdated: "2025-12-28",
+		},
+		Score: domain.DetailScore{
+			Total: 84,
+			Radar: domain.RadarScore{
+				Rent:     85,
+				Safety:   70,
+				Facility: 90,
+				Access:   80,
+				Disaster: 60,
+			},
+		},
+		MarketPrice: domain.MarketData{
+			Prices: map[string]float64{
+				"1R":   7.5,
+				"1K":   8.2,
+				"1LDK": 12.5,
+				"2LDK": 15.0,
+			},
+			NeighborComparison: domain.NeighborComparison{
+				NextStationDiff: -5000,
+				PrevStationDiff: 2000,
+			},
+		},
+		AffiliateLinks: domain.AffiliateLinks{
+			Suumo: "https://suumo.jp/chintai/", // TODO: Generate dynamic link
+			Homes: "https://www.homes.co.jp/",  // TODO: Generate dynamic link
+		},
+	}
+
+	return detail, nil
 }
