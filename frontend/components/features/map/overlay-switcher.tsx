@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Shield, ShoppingCart, Trees } from "lucide-react";
+import { Shield, ShoppingCart, Tree } from "@phosphor-icons/react";
 
 export function OverlaySwitcherMock() {
   return (
@@ -31,7 +31,7 @@ export function OverlaySwitcherMock() {
         size="sm"
         className="justify-start gap-2 h-9 w-40 text-muted-foreground hover:text-foreground rounded-none"
       >
-        <Trees className="h-3 w-3" />
+        <Tree className="h-3 w-3" />
         <span className="font-sans">Parks & Nature</span>
       </Button>
     </div>

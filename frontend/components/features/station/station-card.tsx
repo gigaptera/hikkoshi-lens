@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Building2, ShieldCheck, MapPin } from "lucide-react";
+import { Buildings, ShieldCheck, MapPin } from "@phosphor-icons/react";
 
 export function StationCard() {
   return (
@@ -44,7 +44,7 @@ export function StationCard() {
         <div className="grid grid-cols-2 gap-4 mt-2">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground uppercase tracking-wider">
-              <Building2 className="h-3 w-3" /> Rent
+              <Buildings className="h-3 w-3" /> Rent
             </div>
             <p className="font-mono text-lg">¥12.5M</p>
           </div>
