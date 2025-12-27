@@ -1,0 +1,156 @@
+@import "tailwindcss";
+
+@plugin "tailwindcss-animate";
+
+@theme {
+  /* Colors - Concrete & Steel (OKLCH) */
+  /* Wall / Background Base - Cool Concrete */
+  --color-neutral-50: oklch(
+    0.98 0.002 240
+  ); /* Purest White-Gray (High Light) */
+  --color-neutral-100: oklch(0.95 0.005 240); /* Panel Surface */
+  --color-neutral-200: oklch(0.9 0.01 240); /* Raw Wall Background */
+  --color-neutral-300: oklch(0.85 0.01 240); /* Structural Element */
+  --color-neutral-400: oklch(0.7 0.01 240); /* Disabled / Border */
+  --color-neutral-500: oklch(0.55 0.01 240); /* Secondary Text */
+  --color-neutral-600: oklch(0.45 0.01 240);
+  --color-neutral-700: oklch(0.35 0.01 240);
+  --color-neutral-800: oklch(0.25 0.01 240); /* Strong Text */
+  --color-neutral-900: oklch(0.2 0.01 240); /* Heading Black */
+  --color-neutral-950: oklch(0.15 0.01 240); /* Deepest Ink */
+
+  /* Primary Accent - Scientific Teal (Laboratory/Data) */
+  /* #00B5AD approx oklch(0.7 0.15 190) */
+  --color-teal-50: oklch(0.96 0.02 190);
+  --color-teal-100: oklch(0.92 0.05 190);
+  --color-teal-200: oklch(0.85 0.08 190);
+  --color-teal-300: oklch(0.78 0.12 190);
+  --color-teal-400: oklch(0.72 0.14 190);
+  --color-teal-500: oklch(0.65 0.16 190); /* Main Brand Color */
+  --color-teal-600: oklch(0.55 0.15 190);
+  --color-teal-700: oklch(0.45 0.12 190);
+  --color-teal-800: oklch(0.35 0.1 190);
+  --color-teal-900: oklch(0.25 0.08 190);
+
+  /* App semantic tokens (Tailwind v4 uses --color-*) */
+  --color-background: var(--color-neutral-200); /* Wall */
+  --color-foreground: var(--color-neutral-900); /* Ink */
+
+  --color-card: var(--color-neutral-100); /* Panel */
+  --color-card-foreground: var(--color-neutral-900);
+
+  --color-popover: var(--color-neutral-100);
+  --color-popover-foreground: var(--color-neutral-900);
+
+  --color-primary: var(--color-teal-500); /* Scientific Teal */
+  --color-primary-foreground: var(--color-neutral-50);
+
+  /* Primary scale (so bg-primary-50 などが効く) */
+  --color-primary-50: var(--color-teal-50);
+  --color-primary-100: var(--color-teal-100);
+  --color-primary-200: var(--color-teal-200);
+  --color-primary-300: var(--color-teal-300);
+  --color-primary-400: var(--color-teal-400);
+  --color-primary-500: var(--color-teal-500);
+  --color-primary-600: var(--color-teal-600);
+  --color-primary-700: var(--color-teal-700);
+  --color-primary-800: var(--color-teal-800);
+  --color-primary-900: var(--color-teal-900);
+
+  --color-secondary: var(--color-neutral-300);
+  --color-secondary-foreground: var(--color-neutral-900);
+
+  --color-muted: var(--color-neutral-300);
+  --color-muted-foreground: var(--color-neutral-600);
+
+  --color-accent: var(--color-teal-500);
+  --color-accent-foreground: var(--color-neutral-50);
+
+  --color-destructive: oklch(0.36 0.15 29);
+  --color-destructive-foreground: var(--color-neutral-50);
+
+  --color-border: var(--color-neutral-400); /* Structural Divider */
+  --color-input: var(--color-neutral-400);
+  --color-ring: var(--color-teal-500);
+
+  /* Spacing - Fibonacci */
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.8125rem;
+  --spacing-5: 1.3125rem;
+  --spacing-8: 2.125rem;
+  --spacing-13: 3.4375rem;
+
+  /* Typography */
+  --font-size-base: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.618rem;
+  --font-size-2xl: 2.618rem;
+  --font-size-3xl: 4.236rem;
+
+  /* Radius - Absolute Zero */
+  /* Radius - friendly */
+  --radius-none: 0;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
+  --radius-DEFAULT: 0.75rem;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+:root {
+  /* shadcn互換変数（必要なものだけ） */
+  --radius: 0.75rem;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: "Inter", "Noto Sans JP", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  position: relative;
+}
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+}
+
+/* Dark theme */
+.dark {
+  --color-background: oklch(0.18 0.01 240);
+  --color-foreground: oklch(0.98 0.002 240);
+
+  --color-card: oklch(0.22 0.01 240);
+  --color-card-foreground: oklch(0.98 0.002 240);
+
+  --color-popover: oklch(0.22 0.01 240);
+  --color-popover-foreground: oklch(0.98 0.002 240);
+
+  --color-secondary: oklch(0.28 0.01 240);
+  --color-secondary-foreground: oklch(0.98 0.002 240);
+
+  --color-muted: oklch(0.28 0.01 240);
+  --color-muted-foreground: oklch(0.75 0.01 240);
+
+  --color-border: oklch(0.35 0.01 240);
+  --color-input: oklch(0.35 0.01 240);
+}
+
+/* Utilities for Concrete Theme */
+.panel-shadow {
+  box-shadow: 0 4px 6px -1px oklch(0 0 0 / 0.1),
+    0 2px 4px -1px oklch(0 0 0 / 0.06);
+}
+
+.recessed {
+  box-shadow: inset 0 2px 4px 0 oklch(0 0 0 / 0.05);
+  background-color: var(--color-neutral-300);
+  border-top: 1px solid var(--color-neutral-400);
+}

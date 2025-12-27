@@ -39,10 +39,10 @@ func (r *stationRepository) GetNearby(ctx context.Context, lat, lon float64, fil
 			q = q.Where("layout = ?", filter.Layout)
 			// 家賃範囲フィルター（オプション）
 			if filter.MinRent > 0 {
-				q = q.Where("rent >= ?", filter.MinRent)
+				q = q.Where("mp.avg_rent >= ?", filter.MinRent)
 			}
 			if filter.MaxRent > 0 {
-				q = q.Where("rent <= ?", filter.MaxRent)
+				q = q.Where("mp.avg_rent <= ?", filter.MaxRent)
 			}
 			return q
 		})
