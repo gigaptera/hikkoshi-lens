@@ -25,14 +25,15 @@ export default function LandingPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="flex-1 flex flex-col items-center justify-center px-6 pb-32 w-full max-w-screen-xl mx-auto text-center space-y-12">
-        <div className="space-y-6">
-          <h1 className="font-display text-[8vw] leading-[1.1] tracking-tight text-foreground">
+      {/* Hero Section */}
+      <section className="flex flex-col items-center pt-16 pb-12 w-full max-w-screen-xl mx-auto text-center space-y-8 px-6">
+        <div className="space-y-4">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl leading-[1.1] tracking-tight text-foreground">
             理想の街と
             <br />
             <span className="">出会う</span>
           </h1>
-          <p className="font-sans text-xl text-muted-foreground tracking-wide">
+          <p className="font-sans text-base md:text-lg text-muted-foreground tracking-wide">
             Data-driven relocation intelligence.
           </p>
         </div>
@@ -40,6 +41,11 @@ export default function LandingPage() {
         <div className="w-full">
           <SearchWidget />
         </div>
+      </section>
+
+      {/* Future Sections Placeholder */}
+      <section className="w-full max-w-screen-xl mx-auto px-6 py-12">
+        {/* Content will be added here in future steps */}
       </section>
 
       {/* Subtle Footer */}
